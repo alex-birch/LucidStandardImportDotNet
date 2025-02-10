@@ -76,7 +76,8 @@ static LucidOAuthConfig GetConfiguration()
         );
     }
     return oAuthConfig;
-}```
+}
+```
 
 
 # Using OAuth
