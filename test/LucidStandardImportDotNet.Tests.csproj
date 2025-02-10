@@ -9,7 +9,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\LucidStandardImport.csproj"/>
+    <ProjectReference Include="..\src\LucidStandardImportDotNet.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <None Include="test_image.png">

@@ -88,7 +88,7 @@ You'll need a developer project and, if you haven't published your project, to r
 
 Refer to the Lucid Docs for that under OAuth. Once set up you can follow the patterns below:
 
-Easiest way to get started is to use the `LocalAuthProvider` class - this will launch a server at the localhost:port specified in your config and will handle the auth flow to create a code for an OAuth session.
+Easiest way to get started is to use the `LocalAuthProvider` class - this will launch a server at the localhost:port specified in your redirectUrl in your oAuthConfig file (see above) and will handle the auth flow to create a code for an OAuth session.
 
 You can also use the `ConsolePromptingOauthProvider` like so:
 ```c#

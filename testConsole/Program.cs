@@ -8,7 +8,7 @@ var page = new Page();
 var layer = new Layer { Title = "Test Layer" };
 var image = new ImageShape
 {
-    Image = new ImageFill("test_image.png", ImageScale.Original),
+    Image = new ImageFill("./Resources/test_image.png", ImageScale.Original),
     BoundingBox = new BoundingBox(0, 0, 100, 100),
     Opacity = 60,
     Stroke = new Stroke { Width = 0 },
@@ -24,7 +24,7 @@ var oAuthConfig = GetConfiguration();
 var importer = new LucidStandardImporter()
 {
     // use to inspect the zip file that is to be uploaded to Lucid
-    DebugOutputFileLocation = "<some-local-path>",
+    DebugOutputFileLocation = "./",
 };
 var oauthProvider = new LocalAuthProvider(oAuthConfig, "./authTokens");
 var session = await oauthProvider.CreateLucidSessionAsync();

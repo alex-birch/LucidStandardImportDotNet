@@ -7,8 +7,13 @@
     <UserSecretsId>6b1192b9-2a01-4f2a-8c9d-9f0a6c57be15</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\LucidStandardImport.csproj"/>
+    <ProjectReference Include="..\src\LucidStandardImportDotNet.csproj"/>
   </ItemGroup>
+  <ItemGroup>
+  <None Update="Resources\*">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.1"/>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1"/>

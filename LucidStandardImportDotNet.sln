@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LucidStandardImport", "src\LucidStandardImport.csproj", "{15F6679C-D0A1-4248-B6E5-30D27E1F9B8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LucidStandardImportDotNet", "src\LucidStandardImportDotNet.csproj", "{15F6679C-D0A1-4248-B6E5-30D27E1F9B8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LucidStandardImport.Tests", "test\LucidStandardImport.Tests.csproj", "{87123877-5AF1-44F3-A181-78A6B3271AF3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LucidStandardImportDotNet.Tests", "test\LucidStandardImportDotNet.Tests.csproj", "{87123877-5AF1-44F3-A181-78A6B3271AF3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testConsole", "testConsole\testConsole.csproj", "{B44F4A13-94C3-4800-B480-6FDB1919CE63}"
 EndProject
