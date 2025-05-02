@@ -134,7 +134,7 @@ public class LocalAuthProvider : LucidOAuthProvider
 public class ConsoleAuthProvider : LucidOAuthProvider
 {
     public ConsoleAuthProvider(LucidOAuthConfig oAuthConfig)
-        : base(oAuthConfig, new LocalFileTokenStorage(""), new ConsolePromptingOAuthFlow()) { }
+        : base(oAuthConfig, new LocalFileTokenStorage("./"), new ConsolePromptingOAuthFlow()) { }
 }
 
 public class LocalFileTokenStorage : ILucidTokenStorage
@@ -169,7 +169,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         try
         {
             var json = JsonSerializer.Serialize(token);
-            await File.WriteAllTextAsync(_localTokenPath, json);
+            await File.WriteAllTextAsync(Path.Combine(_localTokenPath, "lucidToken.json"), json);
         }
         catch (Exception ex)
         {
