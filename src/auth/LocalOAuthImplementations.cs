@@ -150,7 +150,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
     {
         try
         {
-            if (File.Exists(_localTokenPath))
+            if (File.Exists(GetTokenFilePath()))
             {
                 var json = await File.ReadAllTextAsync(_localTokenPath);
                 var token = JsonSerializer.Deserialize<LucidToken>(json);
@@ -164,12 +164,17 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         return null;
     }
 
+    private string GetTokenFilePath()
+    {
+        return Path.Combine(_localTokenPath, "lucid_token.json");
+    }
+
     public async Task SaveTokenAsync(LucidToken token)
     {
         try
         {
             var json = JsonSerializer.Serialize(token);
-            await File.WriteAllTextAsync(Path.Combine(_localTokenPath, "lucidToken.json"), json);
+            await File.WriteAllTextAsync(GetTokenFilePath(), json);
         }
         catch (Exception ex)
         {
