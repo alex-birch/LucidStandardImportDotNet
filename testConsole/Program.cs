@@ -1,4 +1,5 @@
-﻿using LucidStandardImport.Api;
+﻿using System.Runtime.CompilerServices;
+using LucidStandardImport.Api;
 using LucidStandardImport.Auth;
 using LucidStandardImport.model;
 using Microsoft.Extensions.Configuration;
@@ -32,9 +33,10 @@ var session = await oauthProvider.CreateLucidSessionAsync();
 
 // almost always returns 1 result but may return more than 1 if the
 // file size of the import is larger than the limit, 2MB
-var urls = await importer.ImportDocument(session, lucidDocument, "test");
+// var urls = await importer.ImportDocument(session, lucidDocument, "test");
+var urls = await importer.UploadLucidFile("data_be070406-3b35-403d-9cc1-47098cae6e5a.lucid.zip", session, "test");
 
-importer.LaunchUrlsInBrowser(urls);
+importer.LaunchUrlInBrowser(urls);
 
 /// <summary>
 /// Gets the configuration from appsettings, env variables, and user secrets

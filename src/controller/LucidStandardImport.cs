@@ -126,7 +126,21 @@ namespace LucidStandardImport.Api
             return LucidDocumentSplitter.SplitPagesIntoMultiFiles(lucidDocument, documentTitle);
         }
 
-        private async Task<string> UploadLucidFile(
+        public async Task<string> UploadLucidFile(
+            string zipFilePath,
+            LucidSession lucidSession,
+            string title
+        )
+        {
+            var lucidFile = new FileInfo(zipFilePath);
+            if (!lucidFile.Exists)
+                throw new FileNotFoundException(
+                    $"The specified file does not exist: {zipFilePath}"
+                );
+            return await UploadLucidFile(lucidFile, lucidSession, title);
+        }
+
+        public async Task<string> UploadLucidFile(
             FileInfo lucidFile,
             LucidSession lucidSession,
             string title
@@ -147,7 +161,6 @@ namespace LucidStandardImport.Api
             // 2) Build a multipart/form-data request
             using var formContent = new MultipartFormDataContent();
 
-            // Add the file
             var fileStreamContent = new StreamContent(lucidFile.OpenRead());
             fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue(fileType);
             formContent.Add(fileStreamContent, "file", "data.lucid");
@@ -250,7 +263,7 @@ namespace LucidStandardImport.Api
                 NullValueHandling = NullValueHandling.Ignore,
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 Converters = { new StringEnumConverter(new CamelCaseNamingStrategy()) },
-                Formatting = Formatting.Indented
+                Formatting = Formatting.Indented,
             };
             return JsonConvert.SerializeObject(lucidDocument, opts).Replace("\r\n", "\n"); // CRLF -> LF line endings.
         }
@@ -316,6 +329,26 @@ namespace LucidStandardImport.Api
             }
         }
 
+        public void LaunchUrlInBrowser(string url)
+        {
+            try
+            {
+                Process.Start(
+                    new ProcessStartInfo
+                    {
+                        FileName = url,
+                        UseShellExecute =
+                            true // Ensures the URL is opened with the default browser
+                        ,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to launch URL: {url}. Error: {ex.Message}");
+            }
+        }
+
         public void LaunchUrlsInBrowser(string[] urls)
         {
             if (urls == null || urls.Length == 0)
@@ -330,23 +363,7 @@ namespace LucidStandardImport.Api
                     Console.WriteLine("Skipping an empty or invalid URL.");
                     continue;
                 }
-
-                try
-                {
-                    Process.Start(
-                        new ProcessStartInfo
-                        {
-                            FileName = url,
-                            UseShellExecute =
-                                true // Ensures the URL is opened with the default browser
-                            ,
-                        }
-                    );
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to launch URL: {url}. Error: {ex.Message}");
-                }
+                LaunchUrlInBrowser(url);
             }
         }
     }
