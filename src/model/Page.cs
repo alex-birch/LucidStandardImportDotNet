@@ -33,12 +33,17 @@ namespace LucidStandardImport.model
         public ReadOnlyCollection<CustomData> CustomData { get; set; }
 
         public Page()
-            : this(new LucidIdFactory()) { }
+            : this(new LucidIdFactory())
+        {
+            lucidIdFactory.AssignId(this);
+        }
 
         public void AddShape(Shape shape)
         {
             lucidIdFactory.AssignId(shape);
             _shapes.Add(shape);
+            if (shape is ImageShape imageShape)
+                lucidIdFactory.AssignId(imageShape.Image);
         }
 
         public void AddLayer(Layer layer)
@@ -62,7 +67,7 @@ namespace LucidStandardImport.model
         public int Height { get; set; } // For custom sizes
     }
 
-    public enum PaperSize 
+    public enum PaperSize
     {
         a4, a3, a2, a1, a0, letter, legal, tabloid
     }

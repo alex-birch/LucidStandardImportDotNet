@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using SixLabors.ImageSharp;
 
 namespace LucidStandardImport.model
 {
@@ -70,12 +71,16 @@ namespace LucidStandardImport.model
         }
     }
 
-    public class ImageFill
+    public class ImageFill : IIdentifiableLucidObject
     {
+        [JsonIgnore]
+        public string Id { get; set; }
         [JsonIgnore]
         public string? LocalPath { get; }
         public string? Ref { get; internal set; }
         public Uri? Url { get; }
+        [JsonIgnore]
+        public Image? InMemoryImage { get; private set; }
         public ImageScale ImageScale { get; set; }
 
         public ImageFill(string localPath, ImageScale imageScale)
@@ -87,6 +92,12 @@ namespace LucidStandardImport.model
         public ImageFill(Uri url, ImageScale imageScale)
         {
             Url = url;
+            ImageScale = imageScale;
+        }
+
+        public ImageFill(byte[] imageBytes, ImageScale imageScale)
+        {
+            InMemoryImage = Image.Load(imageBytes);
             ImageScale = imageScale;
         }
     }
