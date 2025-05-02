@@ -12,7 +12,7 @@ namespace LucidStandardImport.model
         }
         public IReadOnlyList<Collection> Collections
         {
-            get { return  _collections; }
+            get { return _collections; }
         }
         public DocumentSettings DocumentSettings { get; set; }
         public BootstrapData BootstrapData { get; set; }
@@ -33,7 +33,7 @@ namespace LucidStandardImport.model
 
         public void AddPage(Page page)
         {
-            LucidIdFactory.AssignId(page);
+            // LucidIdFactory.AssignId(page);
             _pages.Add(page);
         }
 

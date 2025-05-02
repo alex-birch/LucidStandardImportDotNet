@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Dynamic;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using LucidStandardImport.Auth;
 using LucidStandardImport.model;
@@ -8,6 +9,7 @@ using LucidStandardImport.util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using SixLabors.ImageSharp;
 
 namespace LucidStandardImport.Api
 {
@@ -15,6 +17,7 @@ namespace LucidStandardImport.Api
     {
         // private ILucidOAuthProvider _lucidOAuthProvider;
         public string? DebugOutputFileLocation { get; set; }
+        public string? DebugInputZipFileLocation { get; set; }
 
         public LucidStandardImporter()
         {
@@ -46,18 +49,38 @@ namespace LucidStandardImport.Api
                 {
                     try
                     {
-                        // Step 1: Serialize and zip the document
-                        var pathToFolder = SerializeAndZipToFolder(splitFile.LucidDocument);
-                        var zipFilePath = ZipHelper.ZipFolderContents(
-                            pathToFolder,
-                            $"data_{Guid.NewGuid()}.lucid.zip"
-                        );
+                        FileInfo zipFilePath;
 
-                        if (DebugOutputFileLocation != null)
-                            File.Copy(
-                                zipFilePath.FullName,
-                                Path.Combine(DebugOutputFileLocation, zipFilePath.Name)
+                        // Step 1: Check if DebugInputZipFileLocation is set
+                        if (!string.IsNullOrEmpty(DebugInputZipFileLocation))
+                        {
+                            // Use the zip file from DebugInputZipFileLocation
+                            zipFilePath = new FileInfo(DebugInputZipFileLocation);
+                            if (!zipFilePath.Exists)
+                            {
+                                throw new FileNotFoundException(
+                                    $"The specified debug zip file does not exist: {DebugInputZipFileLocation}"
+                                );
+                            }
+                        }
+                        else
+                        {
+                            // Serialize and zip the document
+                            var pathToFolder = SerializeAndZipToFolder(splitFile.LucidDocument);
+                            zipFilePath = ZipHelper.ZipFolderContents(
+                                pathToFolder,
+                                $"data_{Guid.NewGuid()}.lucid.zip"
                             );
+
+                            // Optionally copy the zip file to DebugOutputFileLocation
+                            if (DebugOutputFileLocation != null)
+                            {
+                                File.Copy(
+                                    zipFilePath.FullName,
+                                    Path.Combine(DebugOutputFileLocation, zipFilePath.Name)
+                                );
+                            }
+                        }
 
                         // Step 2: Upload the file and store the URL
                         lucidUrls[idx] = await UploadLucidFile(
@@ -215,7 +238,7 @@ namespace LucidStandardImport.Api
 
             var json = SerializeToJsonString(lucidDocument);
             var documentJsonPath = Path.Combine(lucidFileDir.FullName, "document.json");
-            File.WriteAllText(documentJsonPath, json);
+            File.WriteAllText(documentJsonPath, json, new UTF8Encoding(false)); // UTF-8 without BOM
 
             return lucidFileDir;
         }
@@ -227,8 +250,9 @@ namespace LucidStandardImport.Api
                 NullValueHandling = NullValueHandling.Ignore,
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 Converters = { new StringEnumConverter(new CamelCaseNamingStrategy()) },
+                Formatting = Formatting.Indented
             };
-            return JsonConvert.SerializeObject(lucidDocument, Formatting.Indented, opts);
+            return JsonConvert.SerializeObject(lucidDocument, opts).Replace("\r\n", "\n"); // CRLF -> LF line endings.
         }
 
         private static void CopyAndNameLocalImages(
@@ -241,37 +265,52 @@ namespace LucidStandardImport.Api
             {
                 foreach (var shape in page.Shapes)
                 {
-                    // Is this shape an ImageShape with a local file reference?
-                    if (
-                        shape is ImageShape imageShape
-                        && !string.IsNullOrEmpty(imageShape.Image.LocalPath)
-                    )
+                    // Is this shape an ImageShape with a local file reference or in-memory image?
+                    if (shape is ImageShape imageShape)
                     {
-                        if (!File.Exists(imageShape.Image.LocalPath))
-                            throw new ArgumentException(
-                                $"Cannot find image file {imageShape.Image.LocalPath}"
+                        if (!skipCopyingImages)
+                            // Ensure the images directory exists
+                            Directory.CreateDirectory(
+                                imagesDirPath
+                                    ?? throw new ArgumentNullException(
+                                        nameof(imagesDirPath),
+                                        $"The images directory path must be provided when {nameof(skipCopyingImages)} is set to false."
+                                    )
                             );
 
-                        var localFileInfo = new FileInfo(imageShape.Image.LocalPath);
-                        var uploadedFileName = $"{shape.Id}_{localFileInfo.Extension}";
-                        if (!skipCopyingImages)
+                        if (!string.IsNullOrEmpty(imageShape.Image.LocalPath))
                         {
-                            if (imagesDirPath == null)
-                            {
-                                throw new ArgumentNullException(
-                                    nameof(imagesDirPath),
-                                    $"The images directory path must be provided when {nameof(skipCopyingImages)} is set to false."
+                            // Handle local file path
+                            if (!File.Exists(imageShape.Image.LocalPath))
+                                throw new ArgumentException(
+                                    $"Cannot find image file {imageShape.Image.LocalPath}"
                                 );
+
+                            var localFileInfo = new FileInfo(imageShape.Image.LocalPath);
+                            var uploadedFileName = $"{shape.Id}{localFileInfo.Extension}";
+                            if (!skipCopyingImages)
+                            {
+                                var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                File.Copy(imageShape.Image.LocalPath, destPath, overwrite: true);
                             }
-                            // Ensure the images directory exists
-                            Directory.CreateDirectory(imagesDirPath);
 
-                            var destPath = Path.Combine(imagesDirPath, uploadedFileName);
-
-                            File.Copy(imageShape.Image.LocalPath, destPath, overwrite: true);
+                            imageShape.Image.Ref = uploadedFileName;
                         }
+                        else if (imageShape.Image.InMemoryImage != null)
+                        {
+                            // Handle in-memory image
+                            var uploadedFileName = $"{imageShape.Image.Id}.png"; // Save as PNG
+                            if (!skipCopyingImages)
+                            {
+                                var destPath = Path.Combine(imagesDirPath, uploadedFileName);
 
-                        imageShape.Image.Ref = uploadedFileName;
+                                // Save the in-memory image to the destination path
+                                using var fileStream = File.OpenWrite(destPath);
+                                imageShape.Image.InMemoryImage.SaveAsPng(fileStream);
+                            }
+
+                            imageShape.Image.Ref = uploadedFileName;
+                        }
                     }
                 }
             }
