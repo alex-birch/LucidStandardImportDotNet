@@ -152,7 +152,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         {
             if (File.Exists(GetTokenFilePath()))
             {
-                var json = await File.ReadAllTextAsync(_localTokenPath);
+                var json = await File.ReadAllTextAsync(GetTokenFilePath());
                 var token = JsonSerializer.Deserialize<LucidToken>(json);
                 return token;
             }

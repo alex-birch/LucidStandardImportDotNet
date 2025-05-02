@@ -73,13 +73,16 @@ namespace LucidStandardImport.util
         {
             foreach (var file in directory.GetFiles())
             {
-                zipArchive.CreateEntryFromFile(file.FullName, Path.Combine(entryPath, file.Name));
+                string entryFilePath = $"{entryPath}/{file.Name}".Replace("\\", "/");
+                zipArchive.CreateEntryFromFile(file.FullName, entryFilePath);
             }
 
             foreach (var subDir in directory.GetDirectories())
             {
-                AddDirectoryToZip(zipArchive, subDir, Path.Combine(entryPath, subDir.Name));
+                string subDirPath = $"{entryPath}/{subDir.Name}".Replace("\\", "/");
+                AddDirectoryToZip(zipArchive, subDir, subDirPath);
             }
         }
+
     }
 }
