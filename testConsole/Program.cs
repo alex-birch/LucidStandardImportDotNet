@@ -26,7 +26,8 @@ var importer = new LucidStandardImporter()
     // use to inspect the zip file that is to be uploaded to Lucid
     DebugOutputFileLocation = "./",
 };
-var oauthProvider = new LocalAuthProvider(oAuthConfig, "./authTokens");
+// var oauthProvider = new LocalAuthProvider(oAuthConfig, "./authTokens");
+var oauthProvider = new ConsoleAuthProvider(oAuthConfig);
 var session = await oauthProvider.CreateLucidSessionAsync();
 
 // almost always returns 1 result but may return more than 1 if the

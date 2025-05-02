@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Dynamic;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using LucidStandardImport.Auth;
 using LucidStandardImport.model;
@@ -8,6 +9,7 @@ using LucidStandardImport.util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using SixLabors.ImageSharp;
 
 namespace LucidStandardImport.Api
 {
@@ -15,6 +17,7 @@ namespace LucidStandardImport.Api
     {
         // private ILucidOAuthProvider _lucidOAuthProvider;
         public string? DebugOutputFileLocation { get; set; }
+public string? DebugInputZipFileLocation { get; set; }
 
         public LucidStandardImporter()
         {
@@ -46,18 +49,38 @@ namespace LucidStandardImport.Api
                 {
                     try
                     {
-                        // Step 1: Serialize and zip the document
+                        FileInfo zipFilePath;
+
+                        // Step 1: Check if DebugInputZipFileLocation is set
+                        if (!string.IsNullOrEmpty(DebugInputZipFileLocation))
+                        {
+                            // Use the zip file from DebugInputZipFileLocation
+                            zipFilePath = new FileInfo(DebugInputZipFileLocation);
+                            if (!zipFilePath.Exists)
+                            {
+                                throw new FileNotFoundException(
+                                    $"The specified debug zip file does not exist: {DebugInputZipFileLocation}"
+                                );
+                            }
+                        }
+                        else
+                        {
+                            // Serialize and zip the document
                         var pathToFolder = SerializeAndZipToFolder(splitFile.LucidDocument);
-                        var zipFilePath = ZipHelper.ZipFolderContents(
+                        zipFilePath = ZipHelper.ZipFolderContents(
                             pathToFolder,
                             $"data_{Guid.NewGuid()}.lucid.zip"
                         );
 
+// Optionally copy the zip file to DebugOutputFileLocation
                         if (DebugOutputFileLocation != null)
+{
                             File.Copy(
                                 zipFilePath.FullName,
                                 Path.Combine(DebugOutputFileLocation, zipFilePath.Name)
                             );
+}
+                        }
 
                         // Step 2: Upload the file and store the URL
                         lucidUrls[idx] = await UploadLucidFile(
@@ -215,7 +238,7 @@ namespace LucidStandardImport.Api
 
             var json = SerializeToJsonString(lucidDocument);
             var documentJsonPath = Path.Combine(lucidFileDir.FullName, "document.json");
-            File.WriteAllText(documentJsonPath, json);
+            File.WriteAllText(documentJsonPath, json, new UTF8Encoding(false)); // UTF-8 without BOM
 
             return lucidFileDir;
         }
@@ -227,8 +250,9 @@ namespace LucidStandardImport.Api
                 NullValueHandling = NullValueHandling.Ignore,
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 Converters = { new StringEnumConverter(new CamelCaseNamingStrategy()) },
+Formatting = Formatting.Indented
             };
-            return JsonConvert.SerializeObject(lucidDocument, Formatting.Indented, opts);
+            return JsonConvert.SerializeObject(lucidDocument, opts).Replace("\r\n", "\n"); // CRLF -> LF line endings.
         }
 
         private static void CopyAndNameLocalImages(

@@ -33,9 +33,11 @@ public class LocalWebServerOAuthFlow : IOAuthFlow
 {
     public async Task<string> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
     {
+        var redirectUri = config.RedirectUri.EndsWith("/") ? config.RedirectUri : config.RedirectUri + "/";
+
         // Spin up HttpListener on the ephemeral port
         using var listener = new HttpListener();
-        listener.Prefixes.Add(config.RedirectUri);
+        listener.Prefixes.Add(redirectUri);
         listener.Start();
 
         // Attempt to open the user's browser
@@ -127,6 +129,12 @@ public class LocalAuthProvider : LucidOAuthProvider
 {
     public LocalAuthProvider(LucidOAuthConfig oAuthConfig, string tokenPath)
         : base(oAuthConfig, new LocalFileTokenStorage(tokenPath), new LocalWebServerOAuthFlow()) { }
+}
+
+public class ConsoleAuthProvider : LucidOAuthProvider
+{
+    public ConsoleAuthProvider(LucidOAuthConfig oAuthConfig)
+        : base(oAuthConfig, new LocalFileTokenStorage(""), new ConsolePromptingOAuthFlow()) { }
 }
 
 public class LocalFileTokenStorage : ILucidTokenStorage
