@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "command": "cmd",
+    "args": [
+        "/c"
+    ],
+    "tasks": [
+        {
+            "label": "build .NET core",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceRoot}/LucidStandardImportDotNet.sln"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        }]
+}
