@@ -28,8 +28,7 @@ namespace LucidStandardImport.model
             LucidIdFactory = lucidIdFactory;
         }
 
-        public LucidDocument()
-            : this(new LucidIdFactory()) { }
+        public LucidDocument() : this(new LucidIdFactory()) { }
 
         public void AddPage(Page page)
         {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 
 var lucidDocument = new LucidDocument { Title = "Test Document" };
 var page = new Page();
-var layer = new Layer { Title = "Test Layer" };
+var layer = new Layer(page, "Test Layer");
 var image = new ImageShape
 {
     Image = new ImageFill("./Resources/test_image.png", ImageScale.Original),

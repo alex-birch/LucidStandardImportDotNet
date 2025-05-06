@@ -51,6 +51,22 @@ namespace LucidStandardImport.model
             lucidIdFactory.AssignId(layer);
             _layers.Add(layer);
         }
+        public void AddLayers(IEnumerable<Layer> layers)
+        {
+            foreach (var layer in layers)
+                AddLayer(layer);
+        }
+
+        public Layer AddLayer(string title)
+        {
+            var layer = new Layer(this)
+            {
+                Title = title
+            };
+            lucidIdFactory.AssignId(layer);
+            _layers.Add(layer);
+            return layer;
+        }
 
         public void AddGroup(Group group)
         {
