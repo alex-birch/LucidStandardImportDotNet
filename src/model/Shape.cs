@@ -52,6 +52,7 @@ namespace LucidStandardImport.model
         public RectangleShape()
         {
             Type = ShapeType.Rectangle;
+            Text = ""; // Set to empty string or lucid will show 'text'
         }
     }
 
@@ -75,10 +76,12 @@ namespace LucidStandardImport.model
     {
         [JsonIgnore]
         public string Id { get; set; }
+
         [JsonIgnore]
         public string? LocalPath { get; }
         public string? Ref { get; internal set; }
         public Uri? Url { get; }
+
         [JsonIgnore]
         public Image? InMemoryImage { get; private set; }
         public ImageScale ImageScale { get; set; }
