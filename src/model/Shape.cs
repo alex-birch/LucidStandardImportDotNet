@@ -72,6 +72,14 @@ namespace LucidStandardImport.model
         }
     }
 
+    public class TextShape : Shape
+    {
+        public TextShape()
+        {
+            Type = ShapeType.Text;
+        }
+    }
+
     public class ImageFill : IIdentifiableLucidObject
     {
         [JsonIgnore]
