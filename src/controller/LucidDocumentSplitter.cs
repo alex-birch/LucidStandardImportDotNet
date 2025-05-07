@@ -36,9 +36,7 @@ namespace LucidStandardImport.Api
 
             // Prepare a base copy with an empty list of pages
             // so we can fill pages as we go.
-            var baseDocJson = JsonSerializer.Serialize(
-                new LucidDocument { Title = originalDoc.Title }
-            );
+            var baseDocJson = JsonSerializer.Serialize(new LucidDocument(originalDoc.Title));
 
             // currentDocument will hold the "in-progress" subset of pages
             var currentDocument = CloneDocumentWithoutPages(originalDoc);
@@ -115,7 +113,7 @@ namespace LucidStandardImport.Api
         /// </summary>
         private static LucidDocument CloneDocumentWithoutPages(LucidDocument original)
         {
-            return new LucidDocument { Title = original.Title };
+            return new LucidDocument(original.Title);
         }
     }
 

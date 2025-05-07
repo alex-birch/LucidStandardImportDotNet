@@ -2,12 +2,13 @@ using System.Collections.ObjectModel;
 
 namespace LucidStandardImport.model
 {
-    public class Page(ILucidIdFactory lucidIdFactory) : IIdentifiableLucidObject
+    public class Page(ILucidIdFactory lucidIdFactory, string title = null, PageSettings pageSettings = null) : IIdentifiableLucidObject
     {
-        private ILucidIdFactory lucidIdFactory = lucidIdFactory;
+        // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
+        public ILucidIdFactory LucidIdFactory { get; } = lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
         public string Id { get; set; }
-        public string Title { get; set; } = "";
-        public PageSettings Settings { get; set; }
+        public string Title { get; set; } = title ?? "";
+        public PageSettings Settings { get; set; } = pageSettings;
         public IReadOnlyList<Shape> Shapes
         {
             get { return _shapes; }
@@ -32,25 +33,26 @@ namespace LucidStandardImport.model
 
         public ReadOnlyCollection<CustomData> CustomData { get; set; }
 
-        public Page()
-            : this(new LucidIdFactory())
-        {
-            lucidIdFactory.AssignId(this);
-        }
+        // public Page()
+        //     : this(new LucidIdFactory())
+        // {
+        //     lucidIdFactory.AssignId(this);
+        // }
 
         public void AddShape(Shape shape)
         {
-            lucidIdFactory.AssignId(shape);
+            LucidIdFactory.AssignId(shape);
             _shapes.Add(shape);
             if (shape is ImageShape imageShape)
-                lucidIdFactory.AssignId(imageShape.Image);
+                LucidIdFactory.AssignId(imageShape.Image);
         }
 
         public void AddLayer(Layer layer)
         {
-            lucidIdFactory.AssignId(layer);
+            LucidIdFactory.AssignId(layer);
             _layers.Add(layer);
         }
+
         public void AddLayers(IEnumerable<Layer> layers)
         {
             foreach (var layer in layers)
@@ -59,18 +61,15 @@ namespace LucidStandardImport.model
 
         public Layer AddLayer(string title)
         {
-            var layer = new Layer(this)
-            {
-                Title = title
-            };
-            lucidIdFactory.AssignId(layer);
+            var layer = new Layer(this) { Title = title };
+            LucidIdFactory.AssignId(layer);
             _layers.Add(layer);
             return layer;
         }
 
         public void AddGroup(Group group)
         {
-            lucidIdFactory.AssignId(group);
+            LucidIdFactory.AssignId(group);
             _groups.Add(group);
         }
     }
@@ -85,10 +84,19 @@ namespace LucidStandardImport.model
 
     public enum PaperSize
     {
-        a4, a3, a2, a1, a0, letter, legal, tabloid
+        a4,
+        a3,
+        a2,
+        a1,
+        a0,
+        letter,
+        legal,
+        tabloid
     }
+
     public enum PaperOrientation
     {
-        portrait, landscape
+        portrait,
+        landscape
     }
 }

@@ -9,7 +9,7 @@ namespace LucidStandardImport.model
         public ShapeType Type { get; protected set; }
         public BoundingBox BoundingBox { get; set; }
         public Style Style { get; set; }
-        public string Text { get; set; }
+        public string Text { get; set; } = ""; // Set to empty string or some shapes will show default 'text'
         private int? _opacity;
 
         /// <summary>
@@ -52,7 +52,6 @@ namespace LucidStandardImport.model
         public RectangleShape()
         {
             Type = ShapeType.Rectangle;
-            Text = ""; // Set to empty string or lucid will show 'text'
         }
     }
 

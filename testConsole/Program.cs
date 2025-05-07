@@ -1,12 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
+using LucidStandardImport;
 using LucidStandardImport.Api;
 using LucidStandardImport.Auth;
 using LucidStandardImport.model;
 using Microsoft.Extensions.Configuration;
 
-var lucidDocument = new LucidDocument { Title = "Test Document" };
-var page = new Page();
-var layer = new Layer(page, "Test Layer");
+var lucidDocument = new LucidDocument("Test Document");
+var page = lucidDocument.AddPage();
+var layer = page.AddLayer("Test Layer");
 var image = new ImageShape
 {
     Image = new ImageFill("./Resources/test_image.png", ImageScale.Original),
@@ -16,8 +17,21 @@ var image = new ImageShape
 };
 layer.AddShape(image);
 page.AddShape(image);
+var circle = new CircleShape
+{
+    BoundingBox = new BoundingBox(50, 50, 50, 50),
+    Opacity = 50,
+    Style = new Style
+    {
+        Fill = new Fill { Type = "color", Color = "#bedbed" }
+    }
+};
+
+layer.AddShape(circle);
 page.AddLayer(layer);
-lucidDocument.AddPage(page);
+
+// page.AddShape(circle);
+// lucidDocument.AddPage(page);
 
 // Get config from appsettings.json, env variables user secrets, or other
 var oAuthConfig = GetConfiguration();
@@ -26,17 +40,20 @@ var importer = new LucidStandardImporter()
 {
     // use to inspect the zip file that is to be uploaded to Lucid
     DebugOutputFileLocation = "./",
+    // DebugInputZipFileLocation = "./data_be070406-3b35-403d-9cc1-47098cae6e5a.lucid.zip"
 };
+
 // var oauthProvider = new LocalAuthProvider(oAuthConfig, "./authTokens");
 var oauthProvider = new ConsoleAuthProvider(oAuthConfig);
 var session = await oauthProvider.CreateLucidSessionAsync();
 
 // almost always returns 1 result but may return more than 1 if the
 // file size of the import is larger than the limit, 2MB
-// var urls = await importer.ImportDocument(session, lucidDocument, "test");
-var urls = await importer.UploadLucidFile("data_be070406-3b35-403d-9cc1-47098cae6e5a.lucid.zip", session, "test");
+var urls = await importer.ImportDocument(session, lucidDocument, "test");
 
-importer.LaunchUrlInBrowser(urls);
+// var urls = await importer.UploadLucidFile("data_be070406-3b35-403d-9cc1-47098cae6e5a.lucid.zip", session, "test");
+
+importer.LaunchUrlInBrowser(urls.FirstOrDefault());
 
 /// <summary>
 /// Gets the configuration from appsettings, env variables, and user secrets

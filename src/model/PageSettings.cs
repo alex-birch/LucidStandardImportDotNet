@@ -1,6 +1,6 @@
 namespace LucidStandardImport.model
 {
-        public class PageSettings
+    public class PageSettings
     {
         public Color FillColor { get; set; }
         public bool InfiniteCanvas { get; set; }

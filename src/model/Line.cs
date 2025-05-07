@@ -14,7 +14,7 @@ namespace LucidStandardImport.model
         public List<Point<double>> ElbowControlPoints { get; set; }
     }
 
-    public class Point<T> 
+    public class Point<T>
     {
         public T X { get; set; }
         public T Y { get; set; }

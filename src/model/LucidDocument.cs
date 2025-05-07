@@ -2,10 +2,13 @@ using Newtonsoft.Json;
 
 namespace LucidStandardImport.model
 {
-    public class LucidDocument
+    public class LucidDocument(string title)
     {
+        [JsonIgnore]
+        // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
+        public LucidIdFactory LucidIdFactory { get; } = new();
+        public string Title { get; set; } = title;
         public int Version { get; set; } = 1;
-        public required string Title { get; set; }
         public IReadOnlyList<Page> Pages
         {
             get { return _pages; }
@@ -20,25 +23,25 @@ namespace LucidStandardImport.model
         private readonly List<Page> _pages = new List<Page>();
         private readonly List<Collection> _collections;
 
-        [JsonIgnore]
-        public ILucidIdFactory LucidIdFactory { get; }
-
-        public LucidDocument(ILucidIdFactory lucidIdFactory)
+        public Page AddPage(string title = null, PageSettings pageSettings = null)
         {
-            LucidIdFactory = lucidIdFactory;
+            var page = new Page(LucidIdFactory, title, pageSettings);
+            LucidIdFactory.AssignId(page);
+            _pages.Add(page);
+            return page;
         }
-
-        public LucidDocument() : this(new LucidIdFactory()) { }
 
         public void AddPage(Page page)
         {
+            ArgumentNullException.ThrowIfNull(page.LucidIdFactory);
             // LucidIdFactory.AssignId(page);
             _pages.Add(page);
         }
 
         public void AddPages(IEnumerable<Page> pages)
         {
-            _pages.AddRange(pages);
+            foreach (var page in pages)
+                AddPage(page);
         }
     }
 }
