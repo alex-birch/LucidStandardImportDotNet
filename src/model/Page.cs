@@ -39,38 +39,48 @@ namespace LucidStandardImport.model
         //     lucidIdFactory.AssignId(this);
         // }
 
-        public void AddShape(Shape shape)
+        public Page AddShape(Shape shape)
         {
             LucidIdFactory.AssignId(shape);
             _shapes.Add(shape);
             if (shape is ImageShape imageShape)
                 LucidIdFactory.AssignId(imageShape.Image);
+            return this;
         }
 
-        public void AddLayer(Layer layer)
+        public Page AddLayer(Layer layer)
         {
             LucidIdFactory.AssignId(layer);
             _layers.Add(layer);
+            return this;
         }
 
-        public void AddLayers(IEnumerable<Layer> layers)
+        public Page AddLayers(IEnumerable<Layer> layers)
         {
             foreach (var layer in layers)
                 AddLayer(layer);
+            return this;
         }
 
         public Layer AddLayer(string title)
         {
-            var layer = new Layer(this) { Title = title };
-            LucidIdFactory.AssignId(layer);
-            _layers.Add(layer);
+            AddLayer(title, out Layer layer);
             return layer;
         }
 
-        public void AddGroup(Group group)
+        public Page AddLayer(string title, out Layer layer)
+        {
+            layer = new Layer(this) { Title = title };
+            LucidIdFactory.AssignId(layer);
+            _layers.Add(layer);
+            return this;
+        }
+
+        public Page AddGroup(Group group)
         {
             LucidIdFactory.AssignId(group);
             _groups.Add(group);
+            return this;
         }
     }
 

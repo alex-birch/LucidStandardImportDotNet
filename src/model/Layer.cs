@@ -19,31 +19,34 @@ namespace LucidStandardImport.model
         /// <summary>
         /// Add to this layer & page
         /// </summary>
-        public void AddShape(Shape shape)
+        public Layer AddShape(Shape shape)
         {
             ShapeReferences.Add(shape);
             _page.AddShape(shape);
+            return this;
         }
 
         /// <summary>
         /// Add shapes to this layer & page
         /// </summary>
-        public void AddShapes(IEnumerable<Shape> shapes)
+        public Layer AddShapes(IEnumerable<Shape> shapes)
         {
             foreach (var shape in shapes)
                 AddShape(shape);
+            return this;
         }
 
         /// <summary>
         /// Add shapes to this layer & page, grouping by outer list
         /// </summary>
-        public void AddGroupedShapes(IEnumerable<IEnumerable<Shape>> groupedShapes)
+        public Layer AddGroupedShapes(IEnumerable<IEnumerable<Shape>> groupedShapes)
         {
             foreach (var shapeGroup in groupedShapes)
             {
                 AddShapes(shapeGroup); // Must add shapes before adding group, as this creates their Id
                 _page.AddGroup(new Group(shapeGroup));
             }
+            return this;
         }
 
         public void RemoveShape(Shape shape)

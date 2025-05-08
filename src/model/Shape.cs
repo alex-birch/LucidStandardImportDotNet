@@ -3,11 +3,11 @@ using SixLabors.ImageSharp;
 
 namespace LucidStandardImport.model
 {
-    public abstract class Shape : IIdentifiableLucidObject
+    public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
     {
         public string Id { get; set; }
         public ShapeType Type { get; protected set; }
-        public BoundingBox BoundingBox { get; set; }
+        public BoundingBox BoundingBox { get; set; } = boundingBox;
         public Style Style { get; set; }
         public string Text { get; set; } = ""; // Set to empty string or some shapes will show default 'text'
         private int? _opacity;
