@@ -40,35 +40,47 @@ namespace LucidStandardImport
                 // Only assign a new ID if it doesn't already have one
                 if (string.IsNullOrEmpty(identifiableLucidObject.Id))
                 {
-                    var newId = GenerateId(UniqueId++);
+                    var newId = GenerateId();
                     identifiableLucidObject.Id = newId;
                     IdCache[identifiableLucidObject] = newId; // Cache the ID
                 }
             }
         }
 
-        private string GenerateId(int number)
+        private string GenerateId()
         {
             var idBuilder = new StringBuilder();
-            bool isFirstCharacter = true;
+            var isFirstCharacter = true;
 
-            do
+            while (true)
             {
-                int remainder = number % Base;
-                char character = AllowedCharacters[remainder];
+                var number = UniqueId;
+                idBuilder.Clear();
 
-                // Ensure the ID doesn't start with a special character
-                if (isFirstCharacter && !char.IsLetterOrDigit(character))
+                do
                 {
-                    character = 'a'; // Default to 'a' to meet the requirements
+                    int remainder = number % Base;
+                    char character = AllowedCharacters[remainder];
+
+                    // Ensure the ID doesn't start with a special character, skip to the next UniqueId
+                    if (isFirstCharacter && !char.IsLetterOrDigit(character))
+                    {
+                        UniqueId++;
+                        break;
+                    }
+
+                    idBuilder.Insert(0, character);
+                    number /= Base;
+                    isFirstCharacter = false;
+                } while (number > 0);
+
+                // If we successfully built a valid ID, return it
+                if (idBuilder.Length > 0)
+                {
+                    UniqueId++; // Increment UniqueId for the next ID
+                    return idBuilder.ToString();
                 }
-
-                idBuilder.Insert(0, character);
-                number /= Base;
-                isFirstCharacter = false;
-            } while (number > 0);
-
-            return idBuilder.ToString();
+            }
         }
     }
 }
