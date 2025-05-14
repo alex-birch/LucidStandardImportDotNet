@@ -47,6 +47,12 @@ namespace LucidStandardImport.model
                 LucidIdFactory.AssignId(imageShape.Image);
             return this;
         }
+        public Page AddShapes(IEnumerable<Shape> shape)
+        {
+            foreach (var s in shape)
+                AddShape(s);
+            return this;
+        }
 
         public Page AddLayer(Layer layer)
         {
@@ -78,6 +84,14 @@ namespace LucidStandardImport.model
 
         public Page AddGroup(Group group)
         {
+            LucidIdFactory.AssignId(group);
+            _groups.Add(group);
+            return this;
+        }
+        public Page AddGroup(IEnumerable<Shape> shapes, out Group group)
+        {
+            AddShapes(shapes);
+            group = new Group(shapes);
             LucidIdFactory.AssignId(group);
             _groups.Add(group);
             return this;

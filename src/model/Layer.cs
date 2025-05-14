@@ -6,10 +6,11 @@ namespace LucidStandardImport.model
         private Page _page = page ?? throw new ArgumentNullException(nameof(page));
 
         private List<Shape> ShapeReferences { get; } = new List<Shape>();
+        private List<Group> GroupReferences { get; } = [];
         public string Id { get; set; }
         public IEnumerable<string> Items
         {
-            get { return ShapeReferences.Select(s => s.Id); }
+            get { return [..ShapeReferences.Select(s => s.Id), ..GroupReferences.Select(g => g.Id)]; }
         } // References IDs of shapes, lines, or groups in this layer
         public string Note { get; set; }
         public List<CustomData> CustomData { get; set; }
@@ -39,13 +40,20 @@ namespace LucidStandardImport.model
         /// <summary>
         /// Add shapes to this layer & page, grouping by outer list
         /// </summary>
+         public Layer AddGroupedShape(IEnumerable<Shape> groupedShapes)
+        {
+            // AddShapes(shapeGroup); // Must add shapes before adding group, as this creates their Id
+            // _page.AddShapes(shapeGroup);
+            // _page.AddGroup(new Group(shapeGroup));
+            _page.AddGroup(groupedShapes, out var group);
+            GroupReferences.Add(group);
+            return this;
+        }
+
         public Layer AddGroupedShapes(IEnumerable<IEnumerable<Shape>> groupedShapes)
         {
             foreach (var shapeGroup in groupedShapes)
-            {
-                AddShapes(shapeGroup); // Must add shapes before adding group, as this creates their Id
-                _page.AddGroup(new Group(shapeGroup));
-            }
+                AddGroupedShape(shapeGroup);
             return this;
         }
 
