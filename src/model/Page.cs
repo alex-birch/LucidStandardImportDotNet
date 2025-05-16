@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace LucidStandardImport.model
 {
@@ -7,6 +8,9 @@ namespace LucidStandardImport.model
         // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
         public ILucidIdFactory LucidIdFactory { get; } = lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
         public string Id { get; set; }
+
+        [JsonIgnore]
+        public string ExternalId { get; set; }
         public string Title { get; set; } = title ?? "";
         public PageSettings Settings { get; set; } = pageSettings;
         public IReadOnlyList<Shape> Shapes

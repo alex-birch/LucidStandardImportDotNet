@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace LucidStandardImport.model
 {
     public class Group : IIdentifiableLucidObject
@@ -8,6 +10,9 @@ namespace LucidStandardImport.model
         }
 
         public string Id { get; set; }
+        
+        [JsonIgnore]
+        public string ExternalId { get; set; }
         public List<string> Items { get; set; } = []; // References IDs of shapes, lines, or other groups
         public string Note { get; set; }
         public List<CustomData> CustomData { get; set; }

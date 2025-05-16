@@ -1,13 +1,19 @@
+using System.Text.Json.Serialization;
+
 namespace LucidStandardImport.model
 {
     public class Layer(Page page, string title = null) : IIdentifiableLucidObject
     {
         public string Title { get; set; } = title ?? ""; // Name of the layer
-        private Page _page = page ?? throw new ArgumentNullException(nameof(page));
+        private readonly Page _page = page ?? throw new ArgumentNullException(nameof(page));
 
-        private List<Shape> ShapeReferences { get; } = new List<Shape>();
+        private List<Shape> ShapeReferences { get; } = [];
+        private List<Line> LineReferences { get; } = [];
         private List<Group> GroupReferences { get; } = [];
         public string Id { get; set; }
+[JsonIgnore]
+        public string ExternalId { get; set; }
+
         public IEnumerable<string> Items
         {
             get { return [..ShapeReferences.Select(s => s.Id), ..GroupReferences.Select(g => g.Id)]; }
@@ -22,9 +28,9 @@ namespace LucidStandardImport.model
         /// </summary>
         public Layer AddShape(Shape shape)
         {
+_page.AddShape(shape);
             ShapeReferences.Add(shape);
-            _page.AddShape(shape);
-            return this;
+                        return this;
         }
 
         /// <summary>

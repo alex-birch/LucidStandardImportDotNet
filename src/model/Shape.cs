@@ -6,6 +6,8 @@ namespace LucidStandardImport.model
     public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
     {
         public string Id { get; set; }
+        [JsonIgnore]
+        public string ExternalId { get; set; }
         public ShapeType Type { get; protected set; }
         public BoundingBox BoundingBox { get; set; } = boundingBox;
         public Style Style { get; set; }
@@ -83,6 +85,9 @@ namespace LucidStandardImport.model
     {
         [JsonIgnore]
         public string Id { get; set; }
+        
+        [JsonIgnore]
+        public string ExternalId { get; set; }
 
         [JsonIgnore]
         public string? LocalPath { get; }

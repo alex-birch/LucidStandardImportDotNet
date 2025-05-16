@@ -8,6 +8,7 @@ namespace LucidStandardImport
     public interface ILucidIdFactory
     {
         public void AssignId(IIdentifiableLucidObject identifiableLucidObject);
+        public string GetOrGenerateId(string externalId);
     }
 
     public class LucidIdFactory : ILucidIdFactory
@@ -17,6 +18,7 @@ namespace LucidStandardImport
             "abcdefghijklmnopqrstuvwxyz0123456789-_.~".ToCharArray();
         private static readonly int Base = AllowedCharacters.Length;
         private readonly ConcurrentDictionary<IIdentifiableLucidObject, string> IdCache = new();
+        private readonly ConcurrentDictionary<string, string> ExternalIdMap = new(); // Maps external IDs to generated IDs
         private readonly object lockObject = new();
 
         public void AssignId(IIdentifiableLucidObject identifiableLucidObject)
@@ -26,6 +28,18 @@ namespace LucidStandardImport
 
             if (!string.IsNullOrEmpty(identifiableLucidObject.Id))
                 return;
+
+            var externalId = identifiableLucidObject.ExternalId;
+            // If an external ID is provided, check if it's already mapped
+            if (!string.IsNullOrEmpty(externalId))
+            {
+                if (ExternalIdMap.TryGetValue(externalId, out string? mappedId))
+                {
+                    identifiableLucidObject.Id = mappedId;
+                    IdCache[identifiableLucidObject] = mappedId; // Cache the ID
+                    return;
+                }
+            }
 
             // Check if the object already has an assigned ID in the cache
             if (IdCache.TryGetValue(identifiableLucidObject, out string? existingId))
@@ -43,8 +57,37 @@ namespace LucidStandardImport
                     var newId = GenerateId();
                     identifiableLucidObject.Id = newId;
                     IdCache[identifiableLucidObject] = newId; // Cache the ID
+
+                    // If an external ID is provided, map it to the generated ID
+                    if (!string.IsNullOrEmpty(externalId))
+                    {
+                        ExternalIdMap[externalId] = newId;
+                    }
                 }
             }
+        }
+
+        public string GetOrGenerateId(string externalId)
+        {
+            if (string.IsNullOrEmpty(externalId))
+                throw new ArgumentNullException(nameof(externalId));
+
+            // Lookup the generated ID for the given external ID
+            if (ExternalIdMap.TryGetValue(externalId, out string generatedId))
+                return generatedId;
+
+            // If not found, generate a new ID and store it in the map
+            lock (lockObject)
+            {
+                // Double-check to avoid race conditions
+                if (!ExternalIdMap.TryGetValue(externalId, out generatedId))
+                {
+                    generatedId = GenerateId();
+                    ExternalIdMap[externalId] = generatedId;
+                }
+            }
+
+            return generatedId;
         }
 
         private string GenerateId()
