@@ -11,13 +11,13 @@ namespace LucidStandardImport.model
         private List<Line> LineReferences { get; } = [];
         private List<Group> GroupReferences { get; } = [];
         public string Id { get; set; }
-[JsonIgnore]
+        [JsonIgnore]
         public string ExternalId { get; set; }
 
-        public IEnumerable<string> Items
+        public IEnumerable<string> Items // References IDs of shapes, lines, or groups in this layer
         {
-            get { return [..ShapeReferences.Select(s => s.Id), ..GroupReferences.Select(g => g.Id)]; }
-        } // References IDs of shapes, lines, or groups in this layer
+            get { return [..ShapeReferences.Select(s => s.Id), ..LineReferences.Select(l => l.Id), ..GroupReferences.Select(g => g.Id)]; }
+        } 
         public string Note { get; set; }
         public List<CustomData> CustomData { get; set; }
         public List<LinkedData> LinkedData { get; set; }
@@ -28,9 +28,9 @@ namespace LucidStandardImport.model
         /// </summary>
         public Layer AddShape(Shape shape)
         {
-_page.AddShape(shape);
+            _page.AddShape(shape);
             ShapeReferences.Add(shape);
-                        return this;
+            return this;
         }
 
         /// <summary>
@@ -60,6 +60,20 @@ _page.AddShape(shape);
         {
             foreach (var shapeGroup in groupedShapes)
                 AddGroupedShape(shapeGroup);
+            return this;
+        }
+
+        public Layer AddLine(Line line)
+        {
+            _page.AddLine(line);
+            LineReferences.Add(line);
+            return this;
+        }
+
+        public Layer AddLines(IEnumerable<Line> lines)
+        {
+            foreach (var line in lines)
+                AddLine(line);
             return this;
         }
 

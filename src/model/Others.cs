@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using LucidStandardImport.model;
 
 namespace LucidStandardImport
@@ -10,9 +11,38 @@ namespace LucidStandardImport
 
     public class Endpoint
     {
-        public EndpointType Type { get; set; }
+        /// <summary>
+        /// Shape endpoint
+        /// </summary>
+        public Endpoint(string externalId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
+            ExternalId = externalId;
+            Type = EndpointType.shapeEndpoint;
+            Position = new(0.5, 0.5);
+        }
+
+        /// <summary>
+        /// Absolute positioned endpoint
+        /// </summary>
+        public Endpoint(double positionX, double positionY)
+        {
+            Type = EndpointType.positionEndpoint;
+            Position = new(positionX, positionY);
+        }
+
         public string ShapeId { get; set; }
-        public RelativePosition Position { get; set; }
+
+        [JsonIgnore]
+        public string ExternalId { get; set; }
+
+        /// <summary>
+        /// ShapeEndpoint, RelativePosition -- A relative position specifying where on the target shape this endpoint should attach.
+        /// PositionEndpoint, Position Endpoint -- An endpoint that is positioned somewhere on the canvas independent of a shape or line.
+        /// </summary>
+        public Position Position { get; set; }
+        public EndpointType Type { get; set; }
+        public string Style { get; set; } = "none";
     }
 
     public class LinkedData
@@ -28,11 +58,7 @@ namespace LucidStandardImport
         public LineSide Side { get; set; } // Top, middle, or bottom
     }
 
-    public class RelativePosition
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
+    public record Position(double X, double Y);
 
     public class Fill
     {

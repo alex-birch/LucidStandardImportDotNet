@@ -65,14 +65,6 @@ namespace LucidStandardImport.model
         }
     }
 
-    public class LineShape : Shape
-    {
-        public LineShape()
-        {
-            Type = ShapeType.Line;
-        }
-    }
-
     public class TextShape : Shape
     {
         public TextShape()

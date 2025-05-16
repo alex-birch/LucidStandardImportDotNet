@@ -8,7 +8,7 @@ namespace LucidStandardImport.model
         // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
         public ILucidIdFactory LucidIdFactory { get; } = lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
         public string Id { get; set; }
-
+        
         [JsonIgnore]
         public string ExternalId { get; set; }
         public string Title { get; set; } = title ?? "";
@@ -55,6 +55,22 @@ namespace LucidStandardImport.model
         {
             foreach (var s in shape)
                 AddShape(s);
+            return this;
+        }
+
+        public Page AddLine(Line line)
+        {
+            LucidIdFactory.AssignId(line);
+            _lines.Add(line);
+            line.Endpoint1.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint1.ExternalId); 
+            line.Endpoint2.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint2.ExternalId); 
+            return this;
+        }
+
+        public Page AddLines(IEnumerable<Line> lines)
+        {
+            foreach (var line in lines)
+                AddLine(line);
             return this;
         }
 
