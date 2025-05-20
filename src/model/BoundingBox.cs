@@ -1,26 +1,19 @@
-namespace LucidStandardImport.model
-{
-    public class BoundingBox
-    {
-        public decimal X { get; set; }
-        public decimal Y { get; set; }
-        public decimal W { get; set; }
-        public decimal H { get; set; }
-        public decimal? Rotation { get; set; }
+namespace LucidStandardImport.model;
 
-        public BoundingBox(
-            decimal x,
-            decimal y,
-            decimal width,
-            decimal height,
-            decimal? rotation = null
-        )
-        {
-            X = x;
-            Y = y;
-            W = width;
-            H = height;
-            Rotation = rotation;
-        }
+public class BoundingBox
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double W { get; set; }
+    public double H { get; set; }
+    public double? Rotation { get; set; }
+
+    public BoundingBox(double x, double y, double width, double height, double? rotation = null)
+    {
+        X = x;
+        Y = y;
+        W = width;
+        H = height;
+        Rotation = rotation;
     }
 }
