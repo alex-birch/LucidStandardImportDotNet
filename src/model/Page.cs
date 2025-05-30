@@ -62,7 +62,9 @@ namespace LucidStandardImport.model
         {
             LucidIdFactory.AssignId(line);
             _lines.Add(line);
+            if (line.Endpoint1.Type == EndpointType.shapeEndpoint)
             line.Endpoint1.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint1.ExternalId); 
+            if (line.Endpoint2.Type == EndpointType.shapeEndpoint)
             line.Endpoint2.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint2.ExternalId); 
             return this;
         }
