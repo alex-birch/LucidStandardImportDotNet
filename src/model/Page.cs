@@ -8,7 +8,7 @@ namespace LucidStandardImport.model
         // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
         public ILucidIdFactory LucidIdFactory { get; } = lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
         public string Id { get; set; }
-        
+
         [JsonIgnore]
         public string ExternalId { get; set; }
         public string Title { get; set; } = title ?? "";
@@ -63,9 +63,9 @@ namespace LucidStandardImport.model
             LucidIdFactory.AssignId(line);
             _lines.Add(line);
             if (line.Endpoint1.Type == EndpointType.shapeEndpoint)
-            line.Endpoint1.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint1.ExternalId); 
+                line.Endpoint1.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint1.ExternalId);
             if (line.Endpoint2.Type == EndpointType.shapeEndpoint)
-            line.Endpoint2.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint2.ExternalId); 
+                line.Endpoint2.ShapeId = LucidIdFactory.GetOrGenerateId(line.Endpoint2.ExternalId);
             return this;
         }
 
@@ -124,8 +124,8 @@ namespace LucidStandardImport.model
     {
         public PaperSize Type { get; set; } // e.g., "letter", "a4"
         public PaperOrientation Format { get; set; } // e.g., "portrait", "landscape"
-        public int Width { get; set; } // For custom sizes
-        public int Height { get; set; } // For custom sizes
+        public int W { get; set; } // For custom sizes
+        public int H { get; set; } // For custom sizes
     }
 
     public enum PaperSize
@@ -137,7 +137,8 @@ namespace LucidStandardImport.model
         a0,
         letter,
         legal,
-        tabloid
+        tabloid,
+        Custom
     }
 
     public enum PaperOrientation
