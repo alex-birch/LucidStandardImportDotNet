@@ -1,120 +1,208 @@
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 
-namespace LucidStandardImport.model
+namespace LucidStandardImport.model;
+
+public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
 {
-    public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
-    {
-        public string Id { get; set; }
-        [JsonIgnore]
-        public string ExternalId { get; set; }
-        public ShapeType Type { get; protected set; }
-        public BoundingBox BoundingBox { get; set; } = boundingBox;
-        public Style Style { get; set; }
-        public string Text { get; set; } = ""; // Set to empty string or some shapes will show default 'text'
-        private int? _opacity;
+    public string Id { get; set; }
+    [JsonIgnore]
+    public string ExternalId { get; set; }
+    public ShapeType Type { get; protected set; }
+    public BoundingBox BoundingBox { get; set; } = boundingBox;
+    public Style Style { get; set; }
+    public string Text { get; set; } = ""; // Set to empty string or some shapes will show default 'text'
+    private int? _opacity;
 
-        /// <summary>
-        /// Must be between 0 and 100 if set
-        /// </summary>
-        public int? Opacity
+    /// <summary>
+    /// Must be between 0 and 100 if set
+    /// </summary>
+    public int? Opacity
+    {
+        get => _opacity;
+        set
         {
-            get => _opacity;
-            set
+            if (value is < 0 or > 100)
             {
-                if (value is < 0 or > 100)
-                {
-                    throw new ArgumentOutOfRangeException(
-                        nameof(Opacity),
-                        "Opacity must be between 0 and 100."
-                    );
-                }
-                _opacity = value;
+                throw new ArgumentOutOfRangeException(
+                    nameof(Opacity),
+                    "Opacity must be between 0 and 100."
+                );
             }
+            _opacity = value;
         }
-        public string Note { get; set; }
-        public List<Action> Actions { get; set; } = null;
-        public List<CustomData> CustomData { get; set; }
-        public List<LinkedData> LinkedData { get; set; }
     }
+    public string Note { get; set; }
+    public List<Action> Actions { get; set; } = null;
+    public List<CustomData> CustomData { get; set; }
+    public List<LinkedData> LinkedData { get; set; }
+}
 
-    public class ImageShape : Shape
+public class ImageShape : Shape
+{
+    public ImageShape()
     {
-        public ImageShape()
-        {
-            Type = ShapeType.Image;
-        }
-
-        public required ImageFill Image { get; set; }
-        public required Stroke Stroke { get; set; }
+        Type = ShapeType.Image;
     }
 
-    public class RectangleShape : Shape
+    public required ImageFill Image { get; set; }
+    public required Stroke Stroke { get; set; }
+}
+
+public class RectangleShape : Shape
+{
+    public RectangleShape()
     {
-        public RectangleShape()
-        {
-            Type = ShapeType.Rectangle;
-        }
+        Type = ShapeType.Rectangle;
     }
+}
 
-    public class CircleShape : Shape
+public class CircleShape : Shape
+{
+    public CircleShape()
     {
-        public CircleShape()
-        {
-            Type = ShapeType.Circle;
-        }
+        Type = ShapeType.Circle;
     }
+}
 
-    public class TextShape : Shape
+public class TextShape : Shape
+{
+    public TextShape()
     {
-        public TextShape()
-        {
-            Type = ShapeType.Text;
-        }
+        Type = ShapeType.Text;
     }
+}
 
-    public class ImageFill : IIdentifiableLucidObject
+public class TableShape : Shape
+{
+    public TableShape()
     {
-        [JsonIgnore]
-        public string Id { get; set; }
-        
-        [JsonIgnore]
-        public string ExternalId { get; set; }
-
-        [JsonIgnore]
-        public string? LocalPath { get; }
-        public string? Ref { get; internal set; }
-        public Uri? Url { get; }
-
-        [JsonIgnore]
-        public Image? InMemoryImage { get; private set; }
-        public ImageScale ImageScale { get; set; }
-
-        public ImageFill(string localPath, ImageScale imageScale)
-        {
-            LocalPath = localPath;
-            ImageScale = imageScale;
-        }
-
-        public ImageFill(Uri url, ImageScale imageScale)
-        {
-            Url = url;
-            ImageScale = imageScale;
-        }
-
-        public ImageFill(byte[] imageBytes, ImageScale imageScale)
-        {
-            InMemoryImage = Image.Load(imageBytes);
-            ImageScale = imageScale;
-        }
+        Type = ShapeType.Table;
+        Text = null;
     }
 
-    public enum ShapeType
+    public TableShape(BoundingBox boundingBox,
+    TableCell[,] cells,
+    List<double?> rowHeights = null,
+    List<double?> colWidths = null)
     {
-        Image,
-        Rectangle,
-        Circle,
-        Text,
-        Line,
+        Type = ShapeType.Table;
+        Text = null;
+        BoundingBox = boundingBox;
+
+        RowCount = cells.GetLength(0);
+        ColCount = cells.GetLength(1);
+        for (int row = 0; row < RowCount; row++)
+            for (int col = 0; col < ColCount; col++)
+            {
+                var cell = cells[row, col];
+                if (cell == null) continue;
+                cell.YPosition = row;
+                cell.XPosition = col;
+                Cells.Add(cell);
+            }
+
+        UserSpecifiedRows = rowHeights != null
+            ? [.. rowHeights
+                .Select((h, i) => h != null ? new FieldSize { Index = i, Size = h.Value } : null)
+                .Where(fs => fs != null)]
+            : [];
+        UserSpecifiedCols = colWidths != null
+            ? [.. colWidths
+                .Select((w, i) => w != null ? new FieldSize { Index = i, Size = w.Value
+                 } : null)
+                .Where(fs => fs != null)]
+            : [];
     }
+
+    /// <summary>
+    /// Number of rows in the table (required).
+    /// </summary>
+    public int RowCount { get; set; }
+
+    /// <summary>
+    /// Number of columns in the table (required).
+    /// </summary>
+    public int ColCount { get; set; }
+
+    /// <summary>
+    /// Array of cell definitions (required).
+    /// </summary>
+    public List<TableCell> Cells { get; set; } = [];
+
+    /// <summary>
+    /// User-specified row heights (optional).
+    /// </summary>
+    public List<FieldSize> UserSpecifiedRows { get; set; }
+
+    /// <summary>
+    /// User-specified column widths (optional).
+    /// </summary>
+    public List<FieldSize> UserSpecifiedCols { get; set; }
+
+    /// <summary>
+    /// Show vertical borders between cells (optional, default true).
+    /// </summary>
+    public bool VerticalBorder { get; set; } = true;
+
+    /// <summary>
+    /// Show horizontal borders between cells (optional, default true).
+    /// </summary>
+    public bool HorizontalBorder { get; set; } = true;
+}
+
+public class TableCell(string text)
+{
+    public int XPosition { get; set; }
+    public int YPosition { get; set; }
+    public int MergeCellsRight { get; set; } = 0;
+    public int MergeCellsDown { get; set; } = 0;
+    public Style Style { get; set; }
+    public string Text { get; set; } = text;
+}
+
+public class ImageFill : IIdentifiableLucidObject
+{
+    [JsonIgnore]
+    public string Id { get; set; }
+
+    [JsonIgnore]
+    public string ExternalId { get; set; }
+
+    [JsonIgnore]
+    public string? LocalPath { get; }
+    public string? Ref { get; internal set; }
+    public Uri? Url { get; }
+
+    [JsonIgnore]
+    public Image? InMemoryImage { get; private set; }
+    public ImageScale ImageScale { get; set; }
+
+    public ImageFill(string localPath, ImageScale imageScale)
+    {
+        LocalPath = localPath;
+        ImageScale = imageScale;
+    }
+
+    public ImageFill(Uri url, ImageScale imageScale)
+    {
+        Url = url;
+        ImageScale = imageScale;
+    }
+
+    public ImageFill(byte[] imageBytes, ImageScale imageScale)
+    {
+        InMemoryImage = Image.Load(imageBytes);
+        ImageScale = imageScale;
+    }
+}
+
+public enum ShapeType
+{
+    Image,
+    Rectangle,
+    Circle,
+    Text,
+    Line,
+    Table
 }

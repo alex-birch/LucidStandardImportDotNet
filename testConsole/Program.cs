@@ -27,6 +27,13 @@ var circle = new CircleShape
     }
 };
 
+page.AddShape(
+    new TableShape(
+        new BoundingBox(100, 0, 100, 100),
+        new TableCell[2, 2] { { new("Test 0,0"), new("Test 1,0") }, { null, new("Test 1,1") } }
+    )
+);
+
 layer.AddShape(circle);
 page.AddLayer(layer);
 

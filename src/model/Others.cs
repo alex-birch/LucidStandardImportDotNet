@@ -79,4 +79,10 @@ namespace LucidStandardImport
     {
         public string HexCode { get; set; } // E.g., "#FFFFFF"
     }
+
+    public class FieldSize
+    {
+        public int Index { get; set; }
+        public double Size { get; set; }
+    }
 }
