@@ -291,38 +291,42 @@ namespace LucidStandardImport.Api
                                     )
                             );
 
-                        if (!string.IsNullOrEmpty(imageShape.Image.LocalPath))
+                        if (!string.IsNullOrEmpty(imageShape.ImageFill.LocalPath))
                         {
                             // Handle local file path
-                            if (!File.Exists(imageShape.Image.LocalPath))
+                            if (!File.Exists(imageShape.ImageFill.LocalPath))
                                 throw new ArgumentException(
-                                    $"Cannot find image file {imageShape.Image.LocalPath}"
+                                    $"Cannot find image file {imageShape.ImageFill.LocalPath}"
                                 );
 
-                            var localFileInfo = new FileInfo(imageShape.Image.LocalPath);
+                            var localFileInfo = new FileInfo(imageShape.ImageFill.LocalPath);
                             var uploadedFileName = $"{shape.Id}{localFileInfo.Extension}";
                             if (!skipCopyingImages)
                             {
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
-                                File.Copy(imageShape.Image.LocalPath, destPath, overwrite: true);
+                                File.Copy(
+                                    imageShape.ImageFill.LocalPath,
+                                    destPath,
+                                    overwrite: true
+                                );
                             }
 
-                            imageShape.Image.Ref = uploadedFileName;
+                            imageShape.ImageFill.Ref = uploadedFileName;
                         }
-                        else if (imageShape.Image.InMemoryImage != null)
+                        else if (imageShape.ImageFill.InMemoryImage != null)
                         {
                             // Handle in-memory image
-                            var uploadedFileName = $"{imageShape.Image.Id}.png"; // Save as PNG
+                            var uploadedFileName = $"{imageShape.ImageFill.Id}.png"; // Save as PNG
                             if (!skipCopyingImages)
                             {
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
 
                                 // Save the in-memory image to the destination path
                                 using var fileStream = File.OpenWrite(destPath);
-                                imageShape.Image.InMemoryImage.SaveAsPng(fileStream);
+                                imageShape.ImageFill.InMemoryImage.SaveAsPng(fileStream);
                             }
 
-                            imageShape.Image.Ref = uploadedFileName;
+                            imageShape.ImageFill.Ref = uploadedFileName;
                         }
                     }
                 }

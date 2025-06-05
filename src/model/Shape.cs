@@ -1,5 +1,7 @@
+using LucidStandardImport.util;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
+
 
 namespace LucidStandardImport.model;
 
@@ -44,9 +46,36 @@ public class ImageShape : Shape
     {
         Type = ShapeType.Image;
     }
-
-    public required ImageFill Image { get; set; }
+    [JsonProperty("image")]
+    public required ImageFill ImageFill { get; set; }
     public required Stroke Stroke { get; set; }
+    [JsonIgnore]
+    public bool? ResizeAndCompress { get; set; } = true;
+    [JsonIgnore]
+    public bool? CompressGreyScale { get; set; } = false;
+    [JsonIgnore]
+    public bool? TileImage { get; set; } = true;
+
+    public async Task<List<ImageShape>> ProcessImageAsync()
+    {
+        if (ImageFill.InMemoryImage == null && ImageFill.LocalPath == null)
+            return [this];
+        // throw new ArgumentException("Image must have either InMemoryImage, LocalPath to be processed.");
+
+        // if (ResizeAndCompress == true)
+        //     await ImageSharpHelper.ProcessPngAsync(ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath), BoundingBox);
+
+        var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath);
+
+        if (ResizeAndCompress == true)
+            image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, CompressGreyScale.Value);
+
+        if (TileImage == true)
+            return this.TileImage(image);
+
+        ImageFill.InMemoryImage = image;
+        return [this];
+    }
 }
 
 public class RectangleShape : Shape
@@ -175,7 +204,7 @@ public class ImageFill : IIdentifiableLucidObject
     public Uri? Url { get; }
 
     [JsonIgnore]
-    public Image? InMemoryImage { get; private set; }
+    public Image? InMemoryImage { get; set; }
     public ImageScale ImageScale { get; set; }
 
     public ImageFill(string localPath, ImageScale imageScale)
@@ -193,6 +222,11 @@ public class ImageFill : IIdentifiableLucidObject
     public ImageFill(byte[] imageBytes, ImageScale imageScale)
     {
         InMemoryImage = Image.Load(imageBytes);
+        ImageScale = imageScale;
+    }
+    public ImageFill(Image image, ImageScale imageScale)
+    {
+        InMemoryImage = image;
         ImageScale = imageScale;
     }
 }

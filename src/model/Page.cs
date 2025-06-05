@@ -48,7 +48,7 @@ namespace LucidStandardImport.model
             LucidIdFactory.AssignId(shape);
             _shapes.Add(shape);
             if (shape is ImageShape imageShape)
-                LucidIdFactory.AssignId(imageShape.Image);
+                LucidIdFactory.AssignId(imageShape.ImageFill);
             return this;
         }
         public Page AddShapes(IEnumerable<Shape> shape)

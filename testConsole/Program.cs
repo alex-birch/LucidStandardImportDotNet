@@ -10,7 +10,7 @@ var page = lucidDocument.AddPage();
 var layer = page.AddLayer("Test Layer");
 var image = new ImageShape
 {
-    Image = new ImageFill("./Resources/test_image.png", ImageScale.Original),
+    ImageFill = new ImageFill("./Resources/test_image.png", ImageScale.Original),
     BoundingBox = new BoundingBox(0, 0, 100, 100),
     Opacity = 60,
     Stroke = new Stroke { Width = 0 },
