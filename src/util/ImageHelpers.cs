@@ -125,6 +125,9 @@ public static class ImageSharpHelper
 
         var tiles = new List<ImageShape>();
 
+        var originX = sourceShape.BoundingBox?.X ?? 0;
+        var originY = sourceShape.BoundingBox?.Y ?? 0;
+
         for (int y = 0; y < verticalTiles; y++)
         {
             for (int x = 0; x < horizontalTiles; x++)
@@ -145,8 +148,10 @@ public static class ImageSharpHelper
                     new ImageShape
                     {
                         ImageFill = new(tile, sourceShape.ImageFill.ImageScale),
-                        BoundingBox = new BoundingBox(left, top, width, height),
+                        BoundingBox = new BoundingBox(originX + left, originY + top, width, height),
                         Stroke = sourceShape.Stroke,
+                        Opacity = sourceShape.Opacity,
+                        Style = sourceShape.Style,
                     }
                 );
             }

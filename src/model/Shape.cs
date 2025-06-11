@@ -60,10 +60,6 @@ public class ImageShape : Shape
     {
         if (ImageFill.InMemoryImage == null && ImageFill.LocalPath == null)
             return [this];
-        // throw new ArgumentException("Image must have either InMemoryImage, LocalPath to be processed.");
-
-        // if (ResizeAndCompress == true)
-        //     await ImageSharpHelper.ProcessPngAsync(ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath), BoundingBox);
 
         var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath);
 
