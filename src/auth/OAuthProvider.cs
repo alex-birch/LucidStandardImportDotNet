@@ -23,7 +23,7 @@ public class LucidOAuthProvider : ILucidOAuthProvider
     public async Task<LucidSession> CreateLucidSessionAsync()
     {
         // 1) Try loading an existing token
-        var existingToken = await _tokenStorage.LoadTokenAsync();
+        var existingToken = await _tokenStorage.LoadTokenAsync(null);
         if (existingToken != null)
         {
             var existingSession = new LucidSession { Token = existingToken };
@@ -50,7 +50,7 @@ public class LucidOAuthProvider : ILucidOAuthProvider
             );
 
         // 4) Save token to disk
-        await _tokenStorage.SaveTokenAsync(newToken);
+        await _tokenStorage.SaveTokenAsync(newToken, null);
 
         // 5) Return the new session
         return new LucidSession { Token = newToken };
@@ -75,8 +75,8 @@ public class UserContext
 
 public interface ILucidTokenStorage
 {
-    Task<LucidToken?> LoadTokenAsync();
-    Task SaveTokenAsync(LucidToken token);
+    Task<LucidToken> LoadTokenAsync(string key);
+    Task SaveTokenAsync(LucidToken token, string key);
 }
 
 public interface IOAuthFlow

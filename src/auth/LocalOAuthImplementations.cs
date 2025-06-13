@@ -33,7 +33,9 @@ public class LocalWebServerOAuthFlow : IOAuthFlow
 {
     public async Task<string> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
     {
-        var redirectUri = config.RedirectUri.EndsWith("/") ? config.RedirectUri : config.RedirectUri + "/";
+        var redirectUri = config.RedirectUri.EndsWith("/")
+            ? config.RedirectUri
+            : config.RedirectUri + "/";
 
         // Spin up HttpListener on the ephemeral port
         using var listener = new HttpListener();
@@ -146,7 +148,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         _localTokenPath = localTokenPath;
     }
 
-    public async Task<LucidToken?> LoadTokenAsync()
+    public async Task<LucidToken?> LoadTokenAsync(string key)
     {
         try
         {
@@ -169,7 +171,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         return Path.Combine(_localTokenPath, "lucid_token.json");
     }
 
-    public async Task SaveTokenAsync(LucidToken token)
+    public async Task SaveTokenAsync(LucidToken token, string key)
     {
         try
         {
