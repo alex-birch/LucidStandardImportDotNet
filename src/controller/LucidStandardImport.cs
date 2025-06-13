@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Dynamic;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -33,7 +32,7 @@ namespace LucidStandardImport.Api
         //     return await ImportDocument(session, lucidDocument, documentTitle);
         // }
 
-        public async Task<string[]> ImportDocument(
+        public async Task<string[]> ImportDocumentAsync(
             LucidSession session,
             LucidDocument lucidDocument,
             string documentTitle
@@ -66,7 +65,9 @@ namespace LucidStandardImport.Api
                         else
                         {
                             // Serialize and zip the document
-                            var pathToFolder = SerializeAndZipToFolder(splitFile.LucidDocument);
+                            var pathToFolder = await SerializeAndZipToFolder(
+                                splitFile.LucidDocument
+                            );
                             zipFilePath = ZipHelper.ZipFolderContents(
                                 pathToFolder,
                                 $"data_{Guid.NewGuid()}.lucid.zip"
@@ -217,13 +218,13 @@ namespace LucidStandardImport.Api
             }
         }
 
-        public string SerializeDocument(LucidDocument lucidDocument)
-        {
-            CopyAndNameLocalImages(lucidDocument, null, true);
-            return SerializeToJsonString(lucidDocument);
-        }
+        // public string SerializeDocument(LucidDocument lucidDocument)
+        // {
+        //     CopyAndNameLocalImages(lucidDocument, null, true);
+        //     return SerializeToJsonString(lucidDocument);
+        // }
 
-        private DirectoryInfo SerializeAndZipToFolder(LucidDocument lucidDocument)
+        private async Task<DirectoryInfo> SerializeAndZipToFolder(LucidDocument lucidDocument)
         {
             // 1. Create a unique temp folder (e.g. "C:\Temp\LucidTemp_<GUID>")
             var baseDirPath = Path.Combine(
@@ -247,7 +248,7 @@ namespace LucidStandardImport.Api
 
             // 2. Find local images in the document and copy them into the "images" subfolder.
             //    We'll also update the `Ref` property to a relative path.
-            CopyAndNameLocalImages(lucidDocument, imagesDirPath, false);
+            await CopyAndNameLocalImagesAsync(lucidDocument, imagesDirPath, false);
 
             var json = SerializeToJsonString(lucidDocument);
             var documentJsonPath = Path.Combine(lucidFileDir.FullName, "document.json");
@@ -268,21 +269,21 @@ namespace LucidStandardImport.Api
             return JsonConvert.SerializeObject(lucidDocument, opts).Replace("\r\n", "\n"); // CRLF -> LF line endings.
         }
 
-        private static void CopyAndNameLocalImages(
+        private static async Task CopyAndNameLocalImagesAsync(
             LucidDocument lucidDocument,
             string? imagesDirPath,
             bool skipCopyingImages = false
         )
         {
+            var imageTasks = new List<Task>();
+
             foreach (var page in lucidDocument.Pages)
             {
                 foreach (var shape in page.Shapes)
                 {
-                    // Is this shape an ImageShape with a local file reference or in-memory image?
                     if (shape is ImageShape imageShape)
                     {
                         if (!skipCopyingImages)
-                            // Ensure the images directory exists
                             Directory.CreateDirectory(
                                 imagesDirPath
                                     ?? throw new ArgumentNullException(
@@ -304,10 +305,15 @@ namespace LucidStandardImport.Api
                             if (!skipCopyingImages)
                             {
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
-                                File.Copy(
-                                    imageShape.ImageFill.LocalPath,
-                                    destPath,
-                                    overwrite: true
+                                imageTasks.Add(
+                                    Task.Run(
+                                        () =>
+                                            File.Copy(
+                                                imageShape.ImageFill.LocalPath,
+                                                destPath,
+                                                overwrite: true
+                                            )
+                                    )
                                 );
                             }
 
@@ -316,14 +322,17 @@ namespace LucidStandardImport.Api
                         else if (imageShape.ImageFill.InMemoryImage != null)
                         {
                             // Handle in-memory image
-                            var uploadedFileName = $"{imageShape.ImageFill.Id}.png"; // Save as PNG
+                            var uploadedFileName = $"{imageShape.ImageFill.Id}.png";
                             if (!skipCopyingImages)
                             {
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
-
-                                // Save the in-memory image to the destination path
-                                using var fileStream = File.OpenWrite(destPath);
-                                imageShape.ImageFill.InMemoryImage.SaveAsPng(fileStream);
+                                imageTasks.Add(
+                                    Task.Run(() =>
+                                    {
+                                        using var fileStream = File.OpenWrite(destPath);
+                                        imageShape.ImageFill.InMemoryImage.SaveAsPng(fileStream);
+                                    })
+                                );
                             }
 
                             imageShape.ImageFill.Ref = uploadedFileName;
@@ -331,6 +340,8 @@ namespace LucidStandardImport.Api
                     }
                 }
             }
+
+            await Task.WhenAll(imageTasks);
         }
 
         public void LaunchUrlInBrowser(string url)
