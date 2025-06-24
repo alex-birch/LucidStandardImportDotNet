@@ -104,7 +104,7 @@ public static class ImageSharpHelper
         return compressedImage;
     }
 
-    private const int MaxTileSizePx = 500;
+    private const int MaxTileSizePx = 1000;
 
     public static List<ImageShape> TileImage(
         this ImageShape sourceShape,
