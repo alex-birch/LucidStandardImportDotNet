@@ -1,6 +1,10 @@
+using System.Text;
 using System.Text.Json; // or Newtonsoft.Json
 using System.Text.Json.Serialization;
 using LucidStandardImport.model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace LucidStandardImport.Api
 {
@@ -36,7 +40,9 @@ namespace LucidStandardImport.Api
 
             // Prepare a base copy with an empty list of pages
             // so we can fill pages as we go.
-            var baseDocJson = JsonSerializer.Serialize(new LucidDocument(originalDoc.Title));
+            var baseDocJson = System.Text.Json.JsonSerializer.Serialize(
+                new LucidDocument(originalDoc.Title)
+            );
 
             // currentDocument will hold the "in-progress" subset of pages
             var currentDocument = CloneDocumentWithoutPages(originalDoc);
@@ -53,7 +59,7 @@ namespace LucidStandardImport.Api
                 testDoc.AddPage(page);
 
                 // Get an approximate size after adding this page
-                var testDocJson = JsonSerializer.Serialize(testDoc);
+                var testDocJson = System.Text.Json.JsonSerializer.Serialize(testDoc);
                 long testDocSize = testDocJson.Length;
 
                 if (currentSize + (testDocSize - currentSize) > maxSizeBytes)
@@ -77,9 +83,9 @@ namespace LucidStandardImport.Api
                     // Start a new doc
                     currentDocument = CloneDocumentWithoutPages(originalDoc);
                     currentPages = new List<Page> { page };
-                    currentSize = JsonSerializer.Serialize(currentDocument).Length;
+                    currentSize = System.Text.Json.JsonSerializer.Serialize(currentDocument).Length;
                     // Add the page to the new doc
-                    currentSize += JsonSerializer.Serialize(page).Length;
+                    currentSize += System.Text.Json.JsonSerializer.Serialize(page).Length;
                 }
                 else
                 {
@@ -114,6 +120,84 @@ namespace LucidStandardImport.Api
         private static LucidDocument CloneDocumentWithoutPages(LucidDocument original)
         {
             return new LucidDocument(original.Title);
+        }
+
+        public static List<LucidDocument> SplitPagesAsYouGo(
+            LucidDocument originalDoc,
+            int maxSizeBytes = 2 * 1048576 // 2 MB
+        )
+        {
+            var result = new List<LucidDocument>();
+            var allPages = originalDoc.Pages ?? new List<Page>();
+
+            LucidDocument currentDoc = new LucidDocument(originalDoc.Title)
+            {
+                Version = originalDoc.Version,
+                DocumentSettings = originalDoc.DocumentSettings,
+                BootstrapData = originalDoc.BootstrapData
+            };
+
+            foreach (var page in allPages)
+            {
+                currentDoc.AddPage(page);
+
+                var json = currentDoc.SerializeToJsonString();
+                var byteCount = Encoding.UTF8.GetByteCount(json);
+
+                if (byteCount > maxSizeBytes)
+                {
+                    // Remove the last page, finalize current doc
+                    currentDoc = RemoveLastPageAndAddToResult(currentDoc, result);
+
+                    // Start a new doc with the current page
+                    currentDoc = new LucidDocument(originalDoc.Title)
+                    {
+                        Version = originalDoc.Version,
+                        DocumentSettings = originalDoc.DocumentSettings,
+                        BootstrapData = originalDoc.BootstrapData
+                    };
+                    currentDoc.AddPage(page);
+
+                    var singlePageJson = currentDoc.SerializeToJsonString();
+                    var singlePageByteCount = Encoding.UTF8.GetByteCount(singlePageJson);
+                    if (singlePageByteCount > maxSizeBytes)
+                    {
+                        throw new InvalidOperationException(
+                            $"A single page ({page.Title}) exceeds the maximum allowed size of {maxSizeBytes / (1024 * 1024.0):F2}MB."
+                        );
+                    }
+                }
+            }
+
+            // Add the last doc if it has pages
+            if (currentDoc.Pages != null && currentDoc.Pages.Count > 0)
+            {
+                result.Add(currentDoc);
+            }
+
+            return result;
+        }
+
+        private static LucidDocument RemoveLastPageAndAddToResult(
+            LucidDocument doc,
+            List<LucidDocument> result
+        )
+        {
+            // Remove the last page
+            var pagesField = typeof(LucidDocument).GetField(
+                "_pages",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+            );
+            if (pagesField != null)
+            {
+                var pagesList = pagesField.GetValue(doc) as List<Page>;
+                if (pagesList != null && pagesList.Count > 0)
+                {
+                    pagesList.RemoveAt(pagesList.Count - 1);
+                }
+            }
+            result.Add(doc);
+            return doc;
         }
     }
 

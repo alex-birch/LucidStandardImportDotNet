@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -35,10 +36,11 @@ namespace LucidStandardImport.Api
         public async Task<string[]> ImportDocumentAsync(
             LucidSession session,
             LucidDocument lucidDocument,
-            string documentTitle
+            string documentTitle,
+            bool validateFileSize = false
         )
         {
-            var multiFiles = SplitPagesIntoMultiFiles(lucidDocument, documentTitle);
+            var multiFiles = LucidDocumentSplitter.SplitPagesAsYouGo(lucidDocument);
             var lucidUrls = new string[multiFiles.Count];
 
             var errors = new List<Exception>();
@@ -65,9 +67,7 @@ namespace LucidStandardImport.Api
                         else
                         {
                             // Serialize and zip the document
-                            var pathToFolder = await SerializeAndZipToFolder(
-                                splitFile.LucidDocument
-                            );
+                            var pathToFolder = await SerializeAndZipToFolder(splitFile);
                             zipFilePath = ZipHelper.ZipFolderContents(
                                 pathToFolder,
                                 $"data_{Guid.NewGuid()}.lucid.zip"
@@ -83,11 +83,16 @@ namespace LucidStandardImport.Api
                             }
                         }
 
+                        if (validateFileSize)
+                            CheckLucidFileLimitations(zipFilePath);
+
                         // Step 2: Upload the file and store the URL
                         lucidUrls[idx] = await UploadLucidFile(
                             zipFilePath,
                             session,
-                            splitFile.Title
+                            multiFiles.Count > 1
+                                ? $"{splitFile.Title} - Part {idx + 1}"
+                                : splitFile.Title
                         );
                     }
                     catch (Exception ex)
@@ -250,23 +255,11 @@ namespace LucidStandardImport.Api
             //    We'll also update the `Ref` property to a relative path.
             await CopyAndNameLocalImagesAsync(lucidDocument, imagesDirPath, false);
 
-            var json = SerializeToJsonString(lucidDocument);
+            var json = lucidDocument.SerializeToJsonString();
             var documentJsonPath = Path.Combine(lucidFileDir.FullName, "document.json");
             File.WriteAllText(documentJsonPath, json, new UTF8Encoding(false)); // UTF-8 without BOM
 
             return lucidFileDir;
-        }
-
-        private static string SerializeToJsonString(LucidDocument lucidDocument)
-        {
-            var opts = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = { new StringEnumConverter(new CamelCaseNamingStrategy()) },
-                Formatting = Formatting.Indented,
-            };
-            return JsonConvert.SerializeObject(lucidDocument, opts).Replace("\r\n", "\n"); // CRLF -> LF line endings.
         }
 
         private static async Task CopyAndNameLocalImagesAsync(
@@ -380,6 +373,58 @@ namespace LucidStandardImport.Api
                 }
                 LaunchUrlInBrowser(url);
             }
+        }
+
+        public static void CheckLucidFileLimitations(FileInfo zipFile)
+        {
+            const long ZIP_LIMIT = 50 * 1024 * 1024;
+            const long DATA_LIMIT = 1 * 1024 * 1024;
+            const long IMAGES_LIMIT = 50 * 1024 * 1024;
+            const long DOC_JSON_LIMIT = 2 * 1024 * 1024;
+
+            long dataFolderSize = 0;
+            long imagesFolderSize = 0;
+            long documentJsonSize = 0;
+            long totalUnzippedSize = 0;
+
+            using (ZipArchive archive = ZipFile.OpenRead(zipFile.FullName))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    totalUnzippedSize += entry.Length;
+
+                    if (entry.FullName.StartsWith("data/"))
+                        dataFolderSize += entry.Length;
+                    else if (entry.FullName.StartsWith("images/"))
+                        imagesFolderSize += entry.Length;
+                    else if (entry.FullName == "document.json")
+                        documentJsonSize = entry.Length;
+                }
+            }
+
+            StringBuilder message = new StringBuilder();
+
+            if (zipFile.Length > ZIP_LIMIT)
+                message.AppendLine(
+                    $"ZIP file size {zipFile.Length / (1024 * 1024.0):F2}MB exceeds limit of 50MB."
+                );
+            if (dataFolderSize > DATA_LIMIT)
+                message.AppendLine(
+                    $"/data folder size {dataFolderSize / (1024 * 1024.0):F2}MB exceeds limit of 1MB."
+                );
+            if (imagesFolderSize > IMAGES_LIMIT)
+                message.AppendLine(
+                    $"/images folder size {imagesFolderSize / (1024 * 1024.0):F2}MB exceeds limit of 50MB."
+                );
+            if (documentJsonSize > DOC_JSON_LIMIT)
+                message.AppendLine(
+                    $"document.json size {documentJsonSize / (1024 * 1024.0):F2}MB exceeds limit of 2MB."
+                );
+
+            if (message.Length > 0)
+                throw new InvalidOperationException(
+                    "Lucid file size limitations exceeded:\n" + message.ToString()
+                );
         }
     }
 
