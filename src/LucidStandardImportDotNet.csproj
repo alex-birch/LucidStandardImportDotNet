@@ -6,7 +6,7 @@
     <Authors>Alex Birch</Authors>
     <Company></Company>
     <PackageId>LucidStandardImportDotNet</PackageId>
-    <Version>0.1.5</Version>
+    <Version>0.1.6</Version>
     <Description>A description of what your library does.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/your-username/MyLibrary</RepositoryUrl>
