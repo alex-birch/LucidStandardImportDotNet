@@ -49,25 +49,17 @@ public class ImageShape : Shape
     [JsonProperty("image")]
     public required ImageFill ImageFill { get; set; }
     public required Stroke Stroke { get; set; }
-    [JsonIgnore]
-    public bool? ResizeAndCompress { get; set; } = true;
-    [JsonIgnore]
-    public bool? CompressGreyScale { get; set; } = false;
-    [JsonIgnore]
-    public bool? TileImage { get; set; } = true;
 
-    public async Task<List<ImageShape>> ProcessImageAsync()
+    public async Task<List<ImageShape>> ProcessImageAsync(bool? greyscale = true, int? tileSize = 1000)
     {
         if (ImageFill.InMemoryImage == null && ImageFill.LocalPath == null)
             return [this];
 
         var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath);
-
-        if (ResizeAndCompress == true)
-            image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, CompressGreyScale.Value);
-
-        if (TileImage == true)
-            return this.TileImage(image);
+        image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, greyscale.Value);
+        
+        if (tileSize.HasValue && tileSize > 0)
+            return this.TileImage(image, tileSize);
 
         ImageFill.InMemoryImage = image;
         return [this];
