@@ -81,6 +81,22 @@ public class CircleShape : Shape
         Type = ShapeType.Circle;
     }
 }
+public class HexagonShape : Shape
+{
+    public HexagonShape()
+    {
+        Type = ShapeType.Hexagon;
+    }
+}
+public class PentagonShape : Shape
+{
+    public PentagonShape()
+    {
+        Type = ShapeType.Pentagon;
+    }
+}
+
+
 
 public class TextShape : Shape
 {
@@ -226,5 +242,7 @@ public enum ShapeType
     Circle,
     Text,
     Line,
-    Table
+    Table,
+    Hexagon,
+    Pentagon
 }
