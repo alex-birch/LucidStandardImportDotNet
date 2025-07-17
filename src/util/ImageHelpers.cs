@@ -65,9 +65,33 @@ public static class ImageSharpHelper
                 );
         }
 
+        var hasTransparent = false;
         if (exportGrayscale)
         {
-            image.Mutate(ctx => ctx.Grayscale());
+            var rgbaImage = image is Image<Rgba32> rgba ? rgba : image.CloneAs<Rgba32>();
+
+            // Custom pixel processor, greyscale but keeps transparent pixels
+            rgbaImage.ProcessPixelRows(accessor =>
+            {
+                for (int y = 0; y < accessor.Height; y++)
+                {
+                    var row = accessor.GetRowSpan(y);
+                    for (int x = 0; x < row.Length; x++)
+                    {
+                        ref Rgba32 pixel = ref row[x];
+                        if (pixel.A == 0)
+                        {
+                            hasTransparent = true;
+                            continue; // Leave fully transparent pixels unchanged
+                        }
+
+                        byte gray = (byte)(pixel.R * 0.299 + pixel.G * 0.587 + pixel.B * 0.114);
+                        pixel.R = gray;
+                        pixel.G = gray;
+                        pixel.B = gray;
+                    }
+                }
+            });
         }
 
         if (fitToBox != null && fitToBox.W > 0 && fitToBox.H > 0)
@@ -84,7 +108,7 @@ public static class ImageSharpHelper
 
         var pngEncoder = new PngEncoder { CompressionLevel = compressionLevel };
 
-        if (exportGrayscale)
+        if (exportGrayscale && !hasTransparent)
         {
             pngEncoder.ColorType = PngColorType.Grayscale;
         }
