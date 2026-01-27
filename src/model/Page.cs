@@ -118,6 +118,45 @@ namespace LucidStandardImport.model
             _groups.Add(group);
             return this;
         }
+
+        /// <summary>
+        /// Move a layer to a specific index in the layers list.
+        /// Layer order determines visual stacking (first = bottom, last = top).
+        /// </summary>
+        public Page MoveLayerToIndex(Layer layer, int index)
+        {
+            if (!_layers.Contains(layer))
+                throw new ArgumentException("Layer not found in page", nameof(layer));
+
+            _layers.Remove(layer);
+            index = Math.Max(0, Math.Min(index, _layers.Count));
+            _layers.Insert(index, layer);
+            return this;
+        }
+
+        /// <summary>
+        /// Move a layer before another layer in the stacking order.
+        /// </summary>
+        public Page MoveLayerBefore(Layer layerToMove, Layer targetLayer)
+        {
+            if (!_layers.Contains(layerToMove))
+                throw new ArgumentException("Layer to move not found in page", nameof(layerToMove));
+            if (!_layers.Contains(targetLayer))
+                throw new ArgumentException("Target layer not found in page", nameof(targetLayer));
+
+            _layers.Remove(layerToMove);
+            var targetIndex = _layers.IndexOf(targetLayer);
+            _layers.Insert(targetIndex, layerToMove);
+            return this;
+        }
+
+        /// <summary>
+        /// Get a layer by its title.
+        /// </summary>
+        public Layer GetLayerByTitle(string title)
+        {
+            return _layers.FirstOrDefault(l => l.Title == title);
+        }
     }
 
     public class PageSize

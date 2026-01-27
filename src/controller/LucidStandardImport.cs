@@ -269,6 +269,7 @@ namespace LucidStandardImport.Api
         )
         {
             var imageTasks = new List<Task>();
+            var writtenFiles = new HashSet<string>(); // Track files already written to avoid duplicates
 
             foreach (var page in lucidDocument.Pages)
             {
@@ -294,19 +295,57 @@ namespace LucidStandardImport.Api
                                 );
 
                             var localFileInfo = new FileInfo(imageShape.ImageFill.LocalPath);
-                            var uploadedFileName = $"{shape.Id}{localFileInfo.Extension}";
-                            if (!skipCopyingImages)
+                            // For SVG files from local paths, load as raw bytes
+                            if (ImageFill.IsSvgExtension(imageShape.ImageFill.LocalPath))
                             {
+                                var uploadedFileName = $"{imageShape.ImageFill.Id}.svg";
+                                if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
+                                {
+                                    var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                    var localPath = imageShape.ImageFill.LocalPath;
+                                    imageTasks.Add(
+                                        Task.Run(
+                                            () => File.Copy(localPath, destPath, overwrite: true)
+                                        )
+                                    );
+                                }
+                                imageShape.ImageFill.Ref = uploadedFileName;
+                            }
+                            else
+                            {
+                                var uploadedFileName = $"{shape.Id}{localFileInfo.Extension}";
+                                if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
+                                {
+                                    // Only write if this file hasn't been written yet
+                                    var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                    imageTasks.Add(
+                                        Task.Run(
+                                            () =>
+                                                File.Copy(
+                                                    imageShape.ImageFill.LocalPath,
+                                                    destPath,
+                                                    overwrite: true
+                                                )
+                                        )
+                                    );
+                                }
+                                imageShape.ImageFill.Ref = uploadedFileName;
+                            }
+                        }
+                        else if (imageShape.ImageFill.RawBytes != null)
+                        {
+                            // Handle raw bytes (for formats like SVG that ImageSharp doesn't support)
+                            var extension = imageShape.ImageFill.RawBytesExtension ?? ".bin";
+                            var uploadedFileName = $"{imageShape.ImageFill.Id}{extension}";
+                            if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
+                            {
+                                // Only write if this file hasn't been written yet (multiple shapes can share same image)
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
                                 imageTasks.Add(
-                                    Task.Run(
-                                        () =>
-                                            File.Copy(
-                                                imageShape.ImageFill.LocalPath,
-                                                destPath,
-                                                overwrite: true
-                                            )
-                                    )
+                                    Task.Run(() =>
+                                    {
+                                        File.WriteAllBytes(destPath, imageShape.ImageFill.RawBytes);
+                                    })
                                 );
                             }
 
@@ -316,8 +355,9 @@ namespace LucidStandardImport.Api
                         {
                             // Handle in-memory image
                             var uploadedFileName = $"{imageShape.ImageFill.Id}.png";
-                            if (!skipCopyingImages)
+                            if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
                             {
+                                // Only write if this file hasn't been written yet
                                 var destPath = Path.Combine(imagesDirPath, uploadedFileName);
                                 imageTasks.Add(
                                     Task.Run(() =>

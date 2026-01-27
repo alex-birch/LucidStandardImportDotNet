@@ -1,13 +1,14 @@
+using System.Text;
 using LucidStandardImport.util;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
-
 
 namespace LucidStandardImport.model;
 
 public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
 {
     public string Id { get; set; }
+
     [JsonIgnore]
     public string ExternalId { get; set; }
     public ShapeType Type { get; protected set; }
@@ -46,18 +47,26 @@ public class ImageShape : Shape
     {
         Type = ShapeType.Image;
     }
+
     [JsonProperty("image")]
     public required ImageFill ImageFill { get; set; }
     public required Stroke Stroke { get; set; }
 
-    public async Task<List<ImageShape>> ProcessImageAsync(bool? greyscale = true, int? tileSize = 1000)
+    public async Task<List<ImageShape>> ProcessImageAsync(
+        bool? greyscale = true,
+        int? tileSize = 1000
+    )
     {
+        // SVG files can't be processed/tiled - return as-is
+        if (ImageFill.RawBytes != null || ImageFill.IsSvgExtension(ImageFill.LocalPath))
+            return [this];
+
         if (ImageFill.InMemoryImage == null && ImageFill.LocalPath == null)
             return [this];
 
         var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath);
         image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, greyscale.Value);
-        
+
         if (tileSize.HasValue && tileSize > 0)
             return this.TileImage(image, tileSize);
 
@@ -81,6 +90,7 @@ public class CircleShape : Shape
         Type = ShapeType.Circle;
     }
 }
+
 public class HexagonShape : Shape
 {
     public HexagonShape()
@@ -88,6 +98,7 @@ public class HexagonShape : Shape
         Type = ShapeType.Hexagon;
     }
 }
+
 public class PentagonShape : Shape
 {
     public PentagonShape()
@@ -95,8 +106,6 @@ public class PentagonShape : Shape
         Type = ShapeType.Pentagon;
     }
 }
-
-
 
 public class TextShape : Shape
 {
@@ -114,10 +123,12 @@ public class TableShape : Shape
         Text = null;
     }
 
-    public TableShape(BoundingBox boundingBox,
-    TableCell[,] cells,
-    List<double?> rowHeights = null,
-    List<double?> colWidths = null)
+    public TableShape(
+        BoundingBox boundingBox,
+        TableCell[,] cells,
+        List<double?> rowHeights = null,
+        List<double?> colWidths = null
+    )
     {
         Type = ShapeType.Table;
         Text = null;
@@ -126,26 +137,38 @@ public class TableShape : Shape
         RowCount = cells.GetLength(0);
         ColCount = cells.GetLength(1);
         for (int row = 0; row < RowCount; row++)
-            for (int col = 0; col < ColCount; col++)
-            {
-                var cell = cells[row, col];
-                if (cell == null) continue;
-                cell.YPosition = row;
-                cell.XPosition = col;
-                Cells.Add(cell);
-            }
+        for (int col = 0; col < ColCount; col++)
+        {
+            var cell = cells[row, col];
+            if (cell == null)
+                continue;
+            cell.YPosition = row;
+            cell.XPosition = col;
+            Cells.Add(cell);
+        }
 
-        UserSpecifiedRows = rowHeights != null
-            ? [.. rowHeights
-                .Select((h, i) => h != null ? new FieldSize { Index = i, Size = h.Value } : null)
-                .Where(fs => fs != null)]
-            : [];
-        UserSpecifiedCols = colWidths != null
-            ? [.. colWidths
-                .Select((w, i) => w != null ? new FieldSize { Index = i, Size = w.Value
-                 } : null)
-                .Where(fs => fs != null)]
-            : [];
+        UserSpecifiedRows =
+            rowHeights != null
+                ?
+                [
+                    .. rowHeights
+                        .Select(
+                            (h, i) => h != null ? new FieldSize { Index = i, Size = h.Value } : null
+                        )
+                        .Where(fs => fs != null),
+                ]
+                : [];
+        UserSpecifiedCols =
+            colWidths != null
+                ?
+                [
+                    .. colWidths
+                        .Select(
+                            (w, i) => w != null ? new FieldSize { Index = i, Size = w.Value } : null
+                        )
+                        .Where(fs => fs != null),
+                ]
+                : [];
     }
 
     /// <summary>
@@ -207,10 +230,30 @@ public class ImageFill : IIdentifiableLucidObject
     public string? Ref { get; internal set; }
     public Uri? Url { get; }
 
+    /// <summary>
+    /// Internal storage for raster images loaded via ImageSharp.
+    /// </summary>
     [JsonIgnore]
-    public Image? InMemoryImage { get; set; }
+    internal Image? InMemoryImage { get; set; }
+
+    /// <summary>
+    /// Internal storage for image formats not supported by ImageSharp (e.g., SVG).
+    /// </summary>
+    [JsonIgnore]
+    internal byte[]? RawBytes { get; set; }
+
+    /// <summary>
+    /// Internal file extension for raw bytes (e.g., ".svg").
+    /// </summary>
+    [JsonIgnore]
+    internal string? RawBytesExtension { get; set; }
+
     public ImageScale ImageScale { get; set; }
 
+    /// <summary>
+    /// Creates an ImageFill from a local file path.
+    /// SVG files are detected by extension and handled appropriately.
+    /// </summary>
     public ImageFill(string localPath, ImageScale imageScale)
     {
         LocalPath = localPath;
@@ -223,15 +266,74 @@ public class ImageFill : IIdentifiableLucidObject
         ImageScale = imageScale;
     }
 
+    /// <summary>
+    /// Creates an ImageFill from image bytes.
+    /// SVG content is automatically detected and handled without ImageSharp processing.
+    /// Other formats are loaded via ImageSharp for processing/tiling support.
+    /// </summary>
     public ImageFill(byte[] imageBytes, ImageScale imageScale)
     {
-        InMemoryImage = Image.Load(imageBytes);
+        if (IsSvgContent(imageBytes))
+        {
+            RawBytes = imageBytes;
+            RawBytesExtension = ".svg";
+        }
+        else
+        {
+            InMemoryImage = Image.Load(imageBytes);
+        }
         ImageScale = imageScale;
     }
-    public ImageFill(Image image, ImageScale imageScale)
+
+    /// <summary>
+    /// Internal constructor for creating ImageFill with an already-loaded ImageSharp image.
+    /// Used by tiling and image processing operations.
+    /// </summary>
+    internal ImageFill(Image image, ImageScale imageScale)
     {
         InMemoryImage = image;
         ImageScale = imageScale;
+    }
+
+    /// <summary>
+    /// Checks if the byte content appears to be an SVG file.
+    /// SVGs are XML files that start with &lt;?xml, &lt;svg, or &lt;!DOCTYPE svg.
+    /// </summary>
+    private static bool IsSvgContent(byte[] bytes)
+    {
+        if (bytes == null || bytes.Length < 4)
+            return false;
+
+        // Skip UTF-8 BOM if present
+        int offset = 0;
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            offset = 3;
+
+        // Skip leading whitespace
+        while (offset < bytes.Length && (bytes[offset] == ' ' || bytes[offset] == '\t' || 
+               bytes[offset] == '\r' || bytes[offset] == '\n'))
+            offset++;
+
+        if (offset >= bytes.Length)
+            return false;
+
+        // Check for common SVG starts (case-insensitive)
+        var checkLength = Math.Min(bytes.Length - offset, 100);
+        var header = Encoding.UTF8.GetString(bytes, offset, checkLength).ToLowerInvariant();
+
+        return header.StartsWith("<?xml") ||
+               header.StartsWith("<svg") ||
+               header.StartsWith("<!doctype svg");
+    }
+
+    /// <summary>
+    /// Checks if a file extension indicates an SVG file.
+    /// </summary>
+    internal static bool IsSvgExtension(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+        return Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -244,5 +346,5 @@ public enum ShapeType
     Line,
     Table,
     Hexagon,
-    Pentagon
+    Pentagon,
 }
