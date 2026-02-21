@@ -7,7 +7,7 @@ using LucidStandardImport.Auth;
 
 public class ConsolePromptingOAuthFlow : IOAuthFlow
 {
-    public async Task<string> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
+    public async Task<string?> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
     {
         // Instruct the user to open the URL in their browser
         Console.WriteLine("Please open the following URL in your browser to authorize:");
@@ -31,7 +31,7 @@ public class ConsolePromptingOAuthFlow : IOAuthFlow
 
 public class LocalWebServerOAuthFlow : IOAuthFlow
 {
-    public async Task<string> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
+    public async Task<string?> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl)
     {
         var redirectUri = config.RedirectUri.EndsWith("/")
             ? config.RedirectUri
@@ -55,7 +55,7 @@ public class LocalWebServerOAuthFlow : IOAuthFlow
         }
 
         // Wait for the OAuth callback
-        var tcs = new TaskCompletionSource<string>();
+        var tcs = new TaskCompletionSource<string?>();
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5)); // Timeout after 5 minutes
 
         _ = Task.Run(
@@ -122,7 +122,6 @@ public class LocalWebServerOAuthFlow : IOAuthFlow
         // Wait for either the code or a timeout
         var completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
         var authCode = (completed == tcs.Task) ? tcs.Task.Result : null;
-
         return authCode;
     }
 }
@@ -148,7 +147,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         _localTokenPath = localTokenPath;
     }
 
-    public async Task<LucidToken?> LoadTokenAsync(string key)
+    public async Task<LucidToken?> LoadTokenAsync(string? key)
     {
         try
         {
@@ -171,7 +170,7 @@ public class LocalFileTokenStorage : ILucidTokenStorage
         return Path.Combine(_localTokenPath, "lucid_token.json");
     }
 
-    public async Task SaveTokenAsync(LucidToken token, string key)
+    public async Task SaveTokenAsync(LucidToken token, string? key)
     {
         try
         {

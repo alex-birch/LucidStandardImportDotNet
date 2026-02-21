@@ -1,9 +1,9 @@
+using LucidStandardImport.model;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Quantization;
-using LucidStandardImport.model;
 
 namespace LucidStandardImport.util;
 
@@ -44,7 +44,7 @@ public static class ImageSharpHelper
     /// </returns>
     public static async Task<Image> ProcessPngAsync(
         Image image,
-        BoundingBox fitToBox = null,
+        BoundingBox? fitToBox = null,
         bool exportGrayscale = false,
         int maxColors = 256,
         PngCompressionLevel compressionLevel = PngCompressionLevel.Level9
@@ -53,8 +53,7 @@ public static class ImageSharpHelper
         if (image == null)
             throw new ArgumentNullException(nameof(image), "Image cannot be null.");
 
-        if (fitToBox == null)
-            throw new ArgumentNullException(nameof(fitToBox), "BoundingBox must be provided.");
+        ArgumentNullException.ThrowIfNull(fitToBox);
 
         if (!exportGrayscale)
         {
@@ -101,24 +100,26 @@ public static class ImageSharpHelper
                 Size = new Size((int)Math.Round(fitToBox.W), (int)Math.Round(fitToBox.H)),
                 Mode = ResizeMode.Max,
                 Sampler = KnownResamplers.Lanczos3,
-                Position = AnchorPositionMode.Center
+                Position = AnchorPositionMode.Center,
             };
             image.Mutate(ctx => ctx.Resize(resizeOptions));
         }
 
-        var pngEncoder = new PngEncoder { CompressionLevel = compressionLevel };
-
-        if (exportGrayscale && !hasTransparent)
-        {
-            pngEncoder.ColorType = PngColorType.Grayscale;
-        }
-        else
-        {
-            pngEncoder.ColorType = PngColorType.Palette;
-            pngEncoder.Quantizer = new WuQuantizer(
-                new QuantizerOptions { MaxColors = maxColors, Dither = null }
-            );
-        }
+        var pngEncoder =
+            exportGrayscale && !hasTransparent
+                ? new PngEncoder
+                {
+                    CompressionLevel = compressionLevel,
+                    ColorType = PngColorType.Grayscale,
+                }
+                : new PngEncoder
+                {
+                    CompressionLevel = compressionLevel,
+                    ColorType = PngColorType.Palette,
+                    Quantizer = new WuQuantizer(
+                        new QuantizerOptions { MaxColors = maxColors, Dither = null }
+                    ),
+                };
 
         using var msOut = new MemoryStream();
         await image.SaveAsync(msOut, pngEncoder);
@@ -138,14 +139,15 @@ public static class ImageSharpHelper
     {
         if (sourceImage == null)
             throw new ArgumentNullException(nameof(sourceImage), "Source image cannot be null.");
-        if (maxPx <= 0)
+        var max = maxPx ?? MaxTileSizePx;
+        if (max <= 0)
             throw new ArgumentException("maxPx must be greater than 0.");
 
-        if (Math.Max(sourceImage.Width, sourceImage.Height) < maxPx)
+        if (Math.Max(sourceImage.Width, sourceImage.Height) < max)
             return [sourceShape];
 
-        int horizontalTiles = (int)Math.Ceiling(sourceImage.Width / (double)maxPx);
-        int verticalTiles = (int)Math.Ceiling(sourceImage.Height / (double)maxPx);
+        int horizontalTiles = (int)Math.Ceiling(sourceImage.Width / (double)max);
+        int verticalTiles = (int)Math.Ceiling(sourceImage.Height / (double)max);
 
         var tiles = new List<ImageShape>();
 
@@ -156,16 +158,16 @@ public static class ImageSharpHelper
         {
             for (int x = 0; x < horizontalTiles; x++)
             {
-                int left = x * maxPx.Value;
-                int top = y * maxPx.Value;
-                int width = Math.Min(maxPx.Value, sourceImage.Width - left);
-                int height = Math.Min(maxPx.Value, sourceImage.Height - top);
+                int left = x * max;
+                int top = y * max;
+                int width = Math.Min(max, sourceImage.Width - left);
+                int height = Math.Min(max, sourceImage.Height - top);
 
                 if (width <= 0 || height <= 0)
                     continue;
 
-                var tile = sourceImage.Clone(
-                    ctx => ctx.Crop(new Rectangle(left, top, width, height))
+                var tile = sourceImage.Clone(ctx =>
+                    ctx.Crop(new Rectangle(left, top, width, height))
                 );
 
                 tiles.Add(

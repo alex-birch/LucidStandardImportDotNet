@@ -5,15 +5,15 @@ using SixLabors.ImageSharp;
 
 namespace LucidStandardImport.model;
 
-public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucidObject
+public abstract class Shape(BoundingBox? boundingBox = null) : IIdentifiableLucidObject
 {
-    public string Id { get; set; }
+    public string Id { get; set; } = null!;
 
     [JsonIgnore]
-    public string ExternalId { get; set; }
+    public string ExternalId { get; set; } = null!;
     public ShapeType Type { get; protected set; }
-    public BoundingBox BoundingBox { get; set; } = boundingBox;
-    public Style Style { get; set; }
+    public BoundingBox BoundingBox { get; set; } = boundingBox!;
+    public Style? Style { get; set; }
     public string Text { get; set; } = ""; // Set to empty string or some shapes will show default 'text'
     private int? _opacity;
 
@@ -35,10 +35,10 @@ public abstract class Shape(BoundingBox boundingBox = null) : IIdentifiableLucid
             _opacity = value;
         }
     }
-    public string Note { get; set; }
-    public List<Action> Actions { get; set; } = null;
-    public List<CustomData> CustomData { get; set; }
-    public List<LinkedData> LinkedData { get; set; }
+    public string? Note { get; set; }
+    public List<Action>? Actions { get; set; }
+    public List<CustomData>? CustomData { get; set; }
+    public List<LinkedData>? LinkedData { get; set; }
 }
 
 public class ImageShape : Shape
@@ -64,8 +64,8 @@ public class ImageShape : Shape
         if (ImageFill.InMemoryImage == null && ImageFill.LocalPath == null)
             return [this];
 
-        var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath);
-        image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, greyscale.Value);
+        var image = ImageFill.InMemoryImage ?? Image.Load(ImageFill.LocalPath!);
+        image = await ImageSharpHelper.ProcessPngAsync(image, BoundingBox, greyscale ?? true);
 
         if (tileSize.HasValue && tileSize > 0)
             return this.TileImage(image, tileSize);
@@ -112,7 +112,7 @@ public class FlexiblePolygonShape : Shape
     public FlexiblePolygonShape()
     {
         Type = ShapeType.FlexiblePolygon;
-        Text = null;
+        Text = null!;
     }
 
     public List<Position> Vertices { get; set; } = [];
@@ -131,18 +131,18 @@ public class TableShape : Shape
     public TableShape()
     {
         Type = ShapeType.Table;
-        Text = null;
+        Text = null!;
     }
 
     public TableShape(
         BoundingBox boundingBox,
         TableCell[,] cells,
-        List<double?> rowHeights = null,
-        List<double?> colWidths = null
+        List<double?>? rowHeights = null,
+        List<double?>? colWidths = null
     )
     {
         Type = ShapeType.Table;
-        Text = null;
+        Text = null!;
         BoundingBox = boundingBox;
 
         RowCount = cells.GetLength(0);
@@ -166,7 +166,7 @@ public class TableShape : Shape
                         .Select(
                             (h, i) => h != null ? new FieldSize { Index = i, Size = h.Value } : null
                         )
-                        .Where(fs => fs != null),
+                        .OfType<FieldSize>(),
                 ]
                 : [];
         UserSpecifiedCols =
@@ -177,7 +177,7 @@ public class TableShape : Shape
                         .Select(
                             (w, i) => w != null ? new FieldSize { Index = i, Size = w.Value } : null
                         )
-                        .Where(fs => fs != null),
+                        .OfType<FieldSize>(),
                 ]
                 : [];
     }
@@ -200,12 +200,12 @@ public class TableShape : Shape
     /// <summary>
     /// User-specified row heights (optional).
     /// </summary>
-    public List<FieldSize> UserSpecifiedRows { get; set; }
+    public List<FieldSize> UserSpecifiedRows { get; set; } = null!;
 
     /// <summary>
     /// User-specified column widths (optional).
     /// </summary>
-    public List<FieldSize> UserSpecifiedCols { get; set; }
+    public List<FieldSize> UserSpecifiedCols { get; set; } = null!;
 
     /// <summary>
     /// Show vertical borders between cells (optional, default true).
@@ -224,17 +224,17 @@ public class TableCell(string text)
     public int YPosition { get; set; }
     public int MergeCellsRight { get; set; } = 0;
     public int MergeCellsDown { get; set; } = 0;
-    public Style Style { get; set; }
+    public Style? Style { get; set; }
     public string Text { get; set; } = text;
 }
 
 public class ImageFill : IIdentifiableLucidObject
 {
     [JsonIgnore]
-    public string Id { get; set; }
+    public string Id { get; set; } = null!;
 
     [JsonIgnore]
-    public string ExternalId { get; set; }
+    public string ExternalId { get; set; } = null!;
 
     [JsonIgnore]
     public string? LocalPath { get; }

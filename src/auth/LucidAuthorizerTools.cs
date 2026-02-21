@@ -27,7 +27,7 @@ public class LucidAuthorizationTools
     /// <summary>
     /// Exchanges the authorization code for an OAuth token using Lucid's token endpoint.
     /// </summary>
-    public static async Task<LucidToken> ExchangeCodeForTokenAsync(
+    public static async Task<LucidToken?> ExchangeCodeForTokenAsync(
         LucidOAuthConfig config,
         string code
     )

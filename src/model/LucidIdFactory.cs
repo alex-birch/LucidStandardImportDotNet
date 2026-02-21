@@ -23,8 +23,7 @@ namespace LucidStandardImport
 
         public void AssignId(IIdentifiableLucidObject identifiableLucidObject)
         {
-            if (identifiableLucidObject == null)
-                throw new ArgumentNullException(nameof(identifiableLucidObject));
+            ArgumentNullException.ThrowIfNull(identifiableLucidObject);
 
             if (!string.IsNullOrEmpty(identifiableLucidObject.Id))
                 return;
@@ -33,7 +32,7 @@ namespace LucidStandardImport
             // If an external ID is provided, check if it's already mapped
             if (!string.IsNullOrEmpty(externalId))
             {
-                if (ExternalIdMap.TryGetValue(externalId, out string? mappedId))
+                if (ExternalIdMap.TryGetValue(externalId, out string? mappedId) && mappedId != null)
                 {
                     identifiableLucidObject.Id = mappedId;
                     IdCache[identifiableLucidObject] = mappedId; // Cache the ID
@@ -73,21 +72,24 @@ namespace LucidStandardImport
                 throw new ArgumentNullException(nameof(externalId));
 
             // Lookup the generated ID for the given external ID
-            if (ExternalIdMap.TryGetValue(externalId, out string generatedId))
+            if (
+                ExternalIdMap.TryGetValue(externalId, out string? generatedId)
+                && generatedId != null
+            )
                 return generatedId;
 
             // If not found, generate a new ID and store it in the map
             lock (lockObject)
             {
                 // Double-check to avoid race conditions
-                if (!ExternalIdMap.TryGetValue(externalId, out generatedId))
+                if (!ExternalIdMap.TryGetValue(externalId, out generatedId) || generatedId == null)
                 {
                     generatedId = GenerateId();
                     ExternalIdMap[externalId] = generatedId;
                 }
             }
 
-            return generatedId;
+            return generatedId!;
         }
 
         private string GenerateId()

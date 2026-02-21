@@ -3,16 +3,21 @@ using System.Text.Json.Serialization;
 
 namespace LucidStandardImport.model
 {
-    public class Page(ILucidIdFactory lucidIdFactory, string title = null, PageSettings pageSettings = null) : IIdentifiableLucidObject
+    public class Page(
+        ILucidIdFactory lucidIdFactory,
+        string? title = null,
+        PageSettings? pageSettings = null
+    ) : IIdentifiableLucidObject
     {
         // LucidIdFactory needs to be owned at the top level LucidDocument and passed to pages, to ensure uniqueness.
-        public ILucidIdFactory LucidIdFactory { get; } = lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
-        public string Id { get; set; }
+        public ILucidIdFactory LucidIdFactory { get; } =
+            lucidIdFactory ?? throw new ArgumentNullException(nameof(lucidIdFactory));
+        public string Id { get; set; } = null!;
 
         [JsonIgnore]
-        public string ExternalId { get; set; }
+        public string ExternalId { get; set; } = null!;
         public string Title { get; set; } = title ?? "";
-        public PageSettings Settings { get; set; } = pageSettings;
+        public PageSettings? Settings { get; set; } = pageSettings;
         public IReadOnlyList<Shape> Shapes
         {
             get { return _shapes; }
@@ -35,7 +40,7 @@ namespace LucidStandardImport.model
         private List<Layer> _layers = new List<Layer>();
         private List<Group> _groups = new List<Group>();
 
-        public ReadOnlyCollection<CustomData> CustomData { get; set; }
+        public ReadOnlyCollection<CustomData> CustomData { get; set; } = null!;
 
         // public Page()
         //     : this(new LucidIdFactory())
@@ -51,6 +56,7 @@ namespace LucidStandardImport.model
                 LucidIdFactory.AssignId(imageShape.ImageFill);
             return this;
         }
+
         public Page AddShapes(IEnumerable<Shape> shape)
         {
             foreach (var s in shape)
@@ -110,6 +116,7 @@ namespace LucidStandardImport.model
             _groups.Add(group);
             return this;
         }
+
         public Page AddGroup(IEnumerable<Shape> shapes, out Group group)
         {
             AddShapes(shapes);
@@ -153,7 +160,7 @@ namespace LucidStandardImport.model
         /// <summary>
         /// Get a layer by its title.
         /// </summary>
-        public Layer GetLayerByTitle(string title)
+        public Layer? GetLayerByTitle(string title)
         {
             return _layers.FirstOrDefault(l => l.Title == title);
         }
@@ -177,12 +184,12 @@ namespace LucidStandardImport.model
         letter,
         legal,
         tabloid,
-        Custom
+        Custom,
     }
 
     public enum PaperOrientation
     {
         portrait,
-        landscape
+        landscape,
     }
 }

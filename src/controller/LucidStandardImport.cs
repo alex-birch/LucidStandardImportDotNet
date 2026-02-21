@@ -160,7 +160,7 @@ namespace LucidStandardImport.Api
             // 1) Add headers
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
-                lucidSession.Token.AccessToken
+                lucidSession.Token!.AccessToken
             );
             httpClient.DefaultRequestHeaders.Add("Lucid-Api-Version", "1");
 
@@ -301,7 +301,7 @@ namespace LucidStandardImport.Api
                                 var uploadedFileName = $"{imageShape.ImageFill.Id}.svg";
                                 if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
                                 {
-                                    var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                    var destPath = Path.Combine(imagesDirPath!, uploadedFileName);
                                     var localPath = imageShape.ImageFill.LocalPath;
                                     imageTasks.Add(
                                         Task.Run(
@@ -317,12 +317,12 @@ namespace LucidStandardImport.Api
                                 if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
                                 {
                                     // Only write if this file hasn't been written yet
-                                    var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                    var destPath = Path.Combine(imagesDirPath!, uploadedFileName);
                                     imageTasks.Add(
                                         Task.Run(
                                             () =>
                                                 File.Copy(
-                                                    imageShape.ImageFill.LocalPath,
+                                                    imageShape.ImageFill.LocalPath!,
                                                     destPath,
                                                     overwrite: true
                                                 )
@@ -340,7 +340,7 @@ namespace LucidStandardImport.Api
                             if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
                             {
                                 // Only write if this file hasn't been written yet (multiple shapes can share same image)
-                                var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                var destPath = Path.Combine(imagesDirPath!, uploadedFileName);
                                 imageTasks.Add(
                                     Task.Run(() =>
                                     {
@@ -358,12 +358,12 @@ namespace LucidStandardImport.Api
                             if (!skipCopyingImages && writtenFiles.Add(uploadedFileName))
                             {
                                 // Only write if this file hasn't been written yet
-                                var destPath = Path.Combine(imagesDirPath, uploadedFileName);
+                                var destPath = Path.Combine(imagesDirPath!, uploadedFileName);
                                 imageTasks.Add(
                                     Task.Run(() =>
                                     {
                                         using var fileStream = File.OpenWrite(destPath);
-                                        imageShape.ImageFill.InMemoryImage.SaveAsPng(fileStream);
+                                        imageShape.ImageFill.InMemoryImage!.SaveAsPng(fileStream);
                                     })
                                 );
                             }

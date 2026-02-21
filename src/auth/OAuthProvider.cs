@@ -23,7 +23,7 @@ public class LucidOAuthProvider : ILucidOAuthProvider
     public async Task<LucidSession> CreateLucidSessionAsync()
     {
         // 1) Try loading an existing token
-        var existingToken = await _tokenStorage.LoadTokenAsync(null);
+        var existingToken = await _tokenStorage.LoadTokenAsync(null!);
         if (existingToken != null)
         {
             var existingSession = new LucidSession { Token = existingToken };
@@ -50,7 +50,7 @@ public class LucidOAuthProvider : ILucidOAuthProvider
             );
 
         // 4) Save token to disk
-        await _tokenStorage.SaveTokenAsync(newToken, null);
+        await _tokenStorage.SaveTokenAsync(newToken, null!);
 
         // 5) Return the new session
         return new LucidSession { Token = newToken };
@@ -60,7 +60,7 @@ public class LucidOAuthProvider : ILucidOAuthProvider
     /// Builds the authorization URL, asks the user to open it manually in a browser,
     /// complete the OAuth flow, and paste the resulting authorization code.
     /// </summary>
-    private async Task<string> StartOAuthFlowAsync()
+    private async Task<string?> StartOAuthFlowAsync()
     {
         string authorizationUrl = LucidAuthorizationTools.BuildAuthorizationUrl(_config);
 
@@ -75,11 +75,11 @@ public class UserContext
 
 public interface ILucidTokenStorage
 {
-    Task<LucidToken> LoadTokenAsync(string key);
-    Task SaveTokenAsync(LucidToken token, string key);
+    Task<LucidToken?> LoadTokenAsync(string? key);
+    Task SaveTokenAsync(LucidToken token, string? key);
 }
 
 public interface IOAuthFlow
 {
-    Task<string> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl);
+    Task<string?> GetOAuthCodeAsync(LucidOAuthConfig config, string authorizationUrl);
 }

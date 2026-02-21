@@ -5,9 +5,9 @@ namespace LucidStandardImport.Auth
     /// </summary>
     public class LucidOAuthConfig
     {
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string RedirectUri { get; set; }
+        public string ClientId { get; set; } = null!;
+        public string ClientSecret { get; set; } = null!;
+        public string RedirectUri { get; set; } = null!;
         // public string Scope { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace LucidStandardImport.Auth
     /// </summary>
     public class LucidSession
     {
-        public LucidToken Token { get; set; }
+        public LucidToken? Token { get; set; }
 
         public bool IsTokenValid(int maxSecondsBeforeExpiration = 1)
         {

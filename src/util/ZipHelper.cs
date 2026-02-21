@@ -83,6 +83,5 @@ namespace LucidStandardImport.util
                 AddDirectoryToZip(zipArchive, subDir, subDirPath);
             }
         }
-
     }
 }

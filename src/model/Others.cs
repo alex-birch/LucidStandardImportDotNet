@@ -5,8 +5,8 @@ namespace LucidStandardImport
 {
     public class Collection
     {
-        public string Id { get; set; }
-        public string DataSource { get; set; } // Typically references a CSV file
+        public string Id { get; set; } = null!;
+        public string DataSource { get; set; } = null!; // Typically references a CSV file
     }
 
     public class Endpoint
@@ -42,10 +42,10 @@ namespace LucidStandardImport
             Position = new(positionX, positionY);
         }
 
-        public string ShapeId { get; set; }
+        public string ShapeId { get; set; } = null!;
 
         [JsonIgnore]
-        public string ExternalId { get; set; }
+        public string ExternalId { get; set; } = null!;
 
         /// <summary>
         /// ShapeEndpoint, RelativePosition -- A relative position specifying where on the target shape this endpoint should attach.
@@ -58,13 +58,13 @@ namespace LucidStandardImport
 
     public class LinkedData
     {
-        public string CollectionId { get; set; }
-        public string Key { get; set; }
+        public string CollectionId { get; set; } = null!;
+        public string Key { get; set; } = null!;
     }
 
     public class LineText
     {
-        public string Text { get; set; }
+        public string Text { get; set; } = null!;
         public double Position { get; set; } // Relative position on the line (0.0 to 1.0)
         public LineSide Side { get; set; } // Top, middle, or bottom
     }
@@ -73,10 +73,10 @@ namespace LucidStandardImport
 
     public class Fill
     {
-        public string Type { get; set; } // "color" or "image"
-        public string Color { get; set; } // For color fills
-        public string Ref { get; set; } // For image fills, references the image file
-        public string ImageScale { get; set; } // For image fills, e.g., "fit", "stretch"
+        public string Type { get; set; } = null!; // "color" or "image"
+        public string Color { get; set; } = null!; // For color fills
+        public string Ref { get; set; } = null!; // For image fills, references the image file
+        public string ImageScale { get; set; } = null!; // For image fills, e.g., "fit", "stretch"
     }
 
     public enum LineSide
@@ -88,7 +88,7 @@ namespace LucidStandardImport
 
     public class Color
     {
-        public string HexCode { get; set; } // E.g., "#FFFFFF"
+        public string HexCode { get; set; } = null!; // E.g., "#FFFFFF"
     }
 
     public class FieldSize

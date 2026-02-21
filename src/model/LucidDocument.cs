@@ -11,21 +11,25 @@ namespace LucidStandardImport.model
         public int Version { get; set; } = 1;
         public IReadOnlyList<Page> Pages
         {
-            get { return [.._pages.Where(p => p != null)]; }
+            get { return [.. _pages.OfType<Page>()]; }
         }
         public IReadOnlyList<Collection> Collections
         {
             get { return _collections; }
         }
-        public DocumentSettings DocumentSettings { get; set; }
-        public BootstrapData BootstrapData { get; set; }
+        public DocumentSettings DocumentSettings { get; set; } = null!;
+        public BootstrapData BootstrapData { get; set; } = null!;
 
-        private readonly List<Page> _pages = new List<Page>();
-        private readonly List<Collection> _collections;
+        private readonly List<Page?> _pages = new List<Page?>();
+        private readonly List<Collection> _collections = new List<Collection>();
 
-        public Page AddPage(string title = null, PageSettings pageSettings = null, int? index = null)
+        public Page AddPage(
+            string? title = null,
+            PageSettings? pageSettings = null,
+            int? index = null
+        )
         {
-            var page = new Page(LucidIdFactory, title, pageSettings);
+            var page = new Page(LucidIdFactory, title ?? "", pageSettings);
             LucidIdFactory.AssignId(page);
             if (!index.HasValue)
                 _pages.Add(page);

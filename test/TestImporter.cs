@@ -1,5 +1,4 @@
-﻿
-// namespace LucidStandardImport;
+﻿// namespace LucidStandardImport;
 
 // public class LucidStandardImportSimpleTests
 // {

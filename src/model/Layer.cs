@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace LucidStandardImport.model
 {
-    public class Layer(Page page, string title = null) : IIdentifiableLucidObject
+    public class Layer(Page page, string? title = null) : IIdentifiableLucidObject
     {
         public string Title { get; set; } = title ?? ""; // Name of the layer
         private readonly Page _page = page ?? throw new ArgumentNullException(nameof(page));
@@ -10,10 +10,10 @@ namespace LucidStandardImport.model
         private List<Shape> ShapeReferences { get; } = [];
         private List<Line> LineReferences { get; } = [];
         private List<Group> GroupReferences { get; } = [];
-        public string Id { get; set; }
+        public string Id { get; set; } = null!;
 
         [JsonIgnore]
-        public string ExternalId { get; set; }
+        public string ExternalId { get; set; } = null!;
 
         public IEnumerable<string> Items // References IDs of shapes, lines, or groups in this layer
         {
@@ -27,9 +27,9 @@ namespace LucidStandardImport.model
                 ];
             }
         }
-        public string Note { get; set; }
-        public List<CustomData> CustomData { get; set; }
-        public List<LinkedData> LinkedData { get; set; }
+        public string? Note { get; set; }
+        public List<CustomData>? CustomData { get; set; }
+        public List<LinkedData>? LinkedData { get; set; }
 
         /// <summary>
         /// Add to this layer & page
