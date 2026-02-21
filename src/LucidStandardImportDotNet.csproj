@@ -6,14 +6,19 @@
     <Authors>Alex Birch</Authors>
     <Company></Company>
     <PackageId>LucidStandardImportDotNet</PackageId>
-    <Version>0.1.10</Version>
+    <Version>0.1.13</Version>
     <Description>A description of what your library does.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/your-username/MyLibrary</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 </Project>

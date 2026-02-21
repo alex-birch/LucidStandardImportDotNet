@@ -107,6 +107,17 @@ public class PentagonShape : Shape
     }
 }
 
+public class FlexiblePolygonShape : Shape
+{
+    public FlexiblePolygonShape()
+    {
+        Type = ShapeType.FlexiblePolygon;
+        Text = null;
+    }
+
+    public List<Position> Vertices { get; set; } = [];
+}
+
 public class TextShape : Shape
 {
     public TextShape()
@@ -310,8 +321,15 @@ public class ImageFill : IIdentifiableLucidObject
             offset = 3;
 
         // Skip leading whitespace
-        while (offset < bytes.Length && (bytes[offset] == ' ' || bytes[offset] == '\t' || 
-               bytes[offset] == '\r' || bytes[offset] == '\n'))
+        while (
+            offset < bytes.Length
+            && (
+                bytes[offset] == ' '
+                || bytes[offset] == '\t'
+                || bytes[offset] == '\r'
+                || bytes[offset] == '\n'
+            )
+        )
             offset++;
 
         if (offset >= bytes.Length)
@@ -321,9 +339,9 @@ public class ImageFill : IIdentifiableLucidObject
         var checkLength = Math.Min(bytes.Length - offset, 100);
         var header = Encoding.UTF8.GetString(bytes, offset, checkLength).ToLowerInvariant();
 
-        return header.StartsWith("<?xml") ||
-               header.StartsWith("<svg") ||
-               header.StartsWith("<!doctype svg");
+        return header.StartsWith("<?xml")
+            || header.StartsWith("<svg")
+            || header.StartsWith("<!doctype svg");
     }
 
     /// <summary>
@@ -347,4 +365,5 @@ public enum ShapeType
     Table,
     Hexagon,
     Pentagon,
+    FlexiblePolygon,
 }

@@ -134,7 +134,7 @@ namespace LucidStandardImport.Api
             {
                 Version = originalDoc.Version,
                 DocumentSettings = originalDoc.DocumentSettings,
-                BootstrapData = originalDoc.BootstrapData
+                BootstrapData = originalDoc.BootstrapData,
             };
 
             foreach (var page in allPages)
@@ -154,7 +154,7 @@ namespace LucidStandardImport.Api
                     {
                         Version = originalDoc.Version,
                         DocumentSettings = originalDoc.DocumentSettings,
-                        BootstrapData = originalDoc.BootstrapData
+                        BootstrapData = originalDoc.BootstrapData,
                     };
                     currentDoc.AddPage(page);
 

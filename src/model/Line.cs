@@ -25,10 +25,10 @@ public class Line : IIdentifiableLucidObject
         Endpoint2 = !string.IsNullOrEmpty(endPoint2ExternalId)
             ? new Endpoint(endPoint2ExternalId)
             : new Endpoint(path.Last().X, path.Last().Y);
-            
+
         path.RemoveAt(0);
         path.RemoveAt(path.Count - 1);
-        Joints = path; 
+        Joints = path;
     }
 
     public string Id { get; set; }
@@ -36,8 +36,9 @@ public class Line : IIdentifiableLucidObject
     [JsonIgnore]
     public string ExternalId { get; set; }
     public LineType LineType { get; set; } = LineType.straight;
-    public Endpoint Endpoint1 { get; }
-    public Endpoint Endpoint2 { get; }
+    public Endpoint Endpoint1 { get; set; }
+    public Endpoint Endpoint2 { get; set; }
     public Stroke Stroke { get; set; }
+    public List<LineText> Text { get; set; } = [];
     public List<Position> Joints { get; } = [];
 }

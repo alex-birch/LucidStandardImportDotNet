@@ -10,7 +10,7 @@ namespace LucidStandardImport.model
         }
 
         public string Id { get; set; }
-        
+
         [JsonIgnore]
         public string ExternalId { get; set; }
         public List<string> Items { get; set; } = []; // References IDs of shapes, lines, or other groups

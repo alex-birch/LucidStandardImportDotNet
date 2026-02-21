@@ -5,14 +5,14 @@ namespace LucidStandardImport.Auth
     /// </summary>
     public class LucidOAuthConfig
     {
-        public string ClientId { get; set; } 
+        public string ClientId { get; set; }
         public string ClientSecret { get; set; }
         public string RedirectUri { get; set; }
         // public string Scope { get; set; }
     }
 
     /// <summary>
-    /// Represents the OAuth token data returned by Lucid. 
+    /// Represents the OAuth token data returned by Lucid.
     /// </summary>
     public class LucidToken
     {

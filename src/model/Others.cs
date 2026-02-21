@@ -23,6 +23,17 @@ namespace LucidStandardImport
         }
 
         /// <summary>
+        /// Shape endpoint with custom relative anchor point.
+        /// </summary>
+        public Endpoint(string externalId, double relativeX, double relativeY)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
+            ExternalId = externalId;
+            Type = EndpointType.shapeEndpoint;
+            Position = new(relativeX, relativeY);
+        }
+
+        /// <summary>
         /// Absolute positioned endpoint
         /// </summary>
         public Endpoint(double positionX, double positionY)

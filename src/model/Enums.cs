@@ -5,28 +5,28 @@ namespace LucidStandardImport.model
         CM,
         Inches,
         PT,
-        PX
+        PX,
     }
 
     public enum LineType
     {
         straight,
         elbow,
-        curved
+        curved,
     }
 
     public enum EndpointType
     {
         lineEndpoint,
         shapeEndpoint,
-        positionEndpoint
+        positionEndpoint,
     }
 
     public enum StrokeStyle
     {
         solid,
         dashed,
-        dotted
+        dotted,
     }
 
     public enum ImageScale
@@ -35,6 +35,6 @@ namespace LucidStandardImport.model
         Fill,
         Stretch,
         Original,
-        Tile
+        Tile,
     }
 }
