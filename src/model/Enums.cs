@@ -22,6 +22,32 @@ namespace LucidStandardImport.model
         positionEndpoint,
     }
 
+    public enum EndpointStyle
+    {
+        none,
+        aggregation,
+        arrow,
+        hollowArrow,
+        openArrow,
+        async1,
+        async2,
+        closedSquare,
+        openSquare,
+        bpmnConditional,
+        bpmnDefault,
+        closedCircle,
+        openCircle,
+        composition,
+        exactlyOne,
+        generalization,
+        many,
+        nesting,
+        one,
+        oneOrMore,
+        zeroOrMore,
+        zeroOrOne,
+    }
+
     public enum StrokeStyle
     {
         solid,

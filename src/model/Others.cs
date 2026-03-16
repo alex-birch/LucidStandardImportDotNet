@@ -14,32 +14,35 @@ namespace LucidStandardImport
         /// <summary>
         /// Shape endpoint
         /// </summary>
-        public Endpoint(string externalId)
+        public Endpoint(string externalId, EndpointStyle style = EndpointStyle.none)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
             ExternalId = externalId;
             Type = EndpointType.shapeEndpoint;
             Position = new(0.5, 0.5);
+            Style = style;
         }
 
         /// <summary>
         /// Shape endpoint with custom relative anchor point.
         /// </summary>
-        public Endpoint(string externalId, double relativeX, double relativeY)
+        public Endpoint(string externalId, double relativeX, double relativeY, EndpointStyle style = EndpointStyle.none)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
             ExternalId = externalId;
             Type = EndpointType.shapeEndpoint;
             Position = new(relativeX, relativeY);
+            Style = style;
         }
 
         /// <summary>
         /// Absolute positioned endpoint
         /// </summary>
-        public Endpoint(double positionX, double positionY)
+        public Endpoint(double positionX, double positionY, EndpointStyle style = EndpointStyle.none)
         {
             Type = EndpointType.positionEndpoint;
             Position = new(positionX, positionY);
+            Style = style;
         }
 
         public string ShapeId { get; set; } = null!;
@@ -53,7 +56,7 @@ namespace LucidStandardImport
         /// </summary>
         public Position Position { get; set; }
         public EndpointType Type { get; set; }
-        public string Style { get; set; } = "none";
+        public EndpointStyle Style { get; set; } = EndpointStyle.none;
     }
 
     public class LinkedData

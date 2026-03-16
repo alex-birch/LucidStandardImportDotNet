@@ -7,7 +7,7 @@
     <Authors>Alex Birch</Authors>
     <Company></Company>
     <PackageId>LucidStandardImportDotNet</PackageId>
-    <Version>0.1.13</Version>
+    <Version>0.1.14</Version>
     <Description>A description of what your library does.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
